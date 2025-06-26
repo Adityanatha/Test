@@ -1,0 +1,6 @@
+streamlit
+playwright
+PyYAML
+requests
+gspread
+oauth2client
