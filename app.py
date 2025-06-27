@@ -58,7 +58,7 @@ with st.expander("⚙️ Configuration"):
             'seeds': {'connection': conn_seed, 'followup': follow_seed}
         }
         save_config(new_cfg)
-        load_config.cache_clear()
+        load_config.clear()
         config = load_config()
         st.success("Configuration saved.")
 
