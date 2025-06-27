@@ -1,5 +1,7 @@
 # Example configuration for Free BDR Pipeline
 linkedin:
+  # Username and password are only required for automated headless runs.
+  # They can be omitted when logging in manually via the dashboard.
   username: "your_email@example.com"
   password: "YOUR_LINKEDIN_PASSWORD"
   searches:

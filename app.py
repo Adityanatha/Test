@@ -31,8 +31,16 @@ config = load_config()
 st.title("Free BDR Pipeline Dashboard")
 
 with st.expander("⚙️ Configuration"):
-    linkedin_user = st.text_input("LinkedIn Username", value=config.get("linkedin", {}).get("username", ""))
-    linkedin_pass = st.text_input("LinkedIn Password", type="password")
+    linkedin_user = st.text_input(
+        "LinkedIn Username",
+        value=config.get("linkedin", {}).get("username", ""),
+        help="Optional. Only needed for automated login",
+    )
+    linkedin_pass = st.text_input(
+        "LinkedIn Password",
+        type="password",
+        help="Optional. Only needed for automated login",
+    )
     searches_raw   = st.text_area(
         "SalesNav Searches (name|url per line)",
         value="\n".join([f"{s['name']}|{s['url']}" for s in config.get("linkedin", {}).get("searches", [])])
