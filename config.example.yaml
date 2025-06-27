@@ -16,7 +16,9 @@ rate_limits:
 seeds:
   connection: "Hi {{FirstName}}, I noticed…"
   followup: "Hello {{FirstName}}, just checking…"
-reporting:
+gsheets:
   creds_json: "path/to/google-creds.json"
   spreadsheet_id: "GOOGLE_SHEET_ID"
-  worksheet: "Sheet1"
+  leads_ws: "Leads"
+  report_ws: "Report"
+  metadata_ws: "Metadata"

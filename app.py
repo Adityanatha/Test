@@ -4,7 +4,9 @@ except ModuleNotFoundError:
     import sys
     sys.exit("Error: 'streamlit' module not found. Install via 'pip install streamlit'.")
 
-import yaml, sqlite3, os
+import yaml, os
+from modules import sheets
+from modules.login import manual_login
 from datetime import datetime
 from modules.salesnav_extract import extract_all_searches
 from modules.hubspot_sync import sync_hubspot
@@ -14,7 +16,6 @@ from modules.reporting import push_daily_metrics
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_FILE = os.path.join(BASE_DIR, "config.yaml")
-DB_FILE = os.path.join(BASE_DIR, "leads.db")
 
 @st.cache_data
 def load_config():
@@ -43,6 +44,10 @@ with st.expander("⚙️ Configuration"):
     max_delay      = st.number_input("Max Delay (sec)", value=config.get("rate_limits", {}).get("max_delay_sec", 90))
     conn_seed      = st.text_area("Connection Prompt", value=config.get("seeds", {}).get("connection", ""))
     follow_seed    = st.text_area("Follow-Up Prompt", value=config.get("seeds", {}).get("followup", ""))
+    gs_creds       = st.text_input("Google Creds JSON", value=config.get("gsheets", {}).get("creds_json", ""))
+    gs_sheet       = st.text_input("Spreadsheet ID", value=config.get("gsheets", {}).get("spreadsheet_id", ""))
+    gs_leads_ws    = st.text_input("Leads Worksheet", value=config.get("gsheets", {}).get("leads_ws", "Leads"))
+    gs_report_ws   = st.text_input("Report Worksheet", value=config.get("gsheets", {}).get("report_ws", "Report"))
 
     if st.button("Save Configuration"):
         searches = []
@@ -55,7 +60,13 @@ with st.expander("⚙️ Configuration"):
             'hubspot': {'api_key': hub_key},
             'huggingface': {'token': hf_token, 'model': hf_model},
             'rate_limits': {'min_delay_sec': int(min_delay), 'max_delay_sec': int(max_delay)},
-            'seeds': {'connection': conn_seed, 'followup': follow_seed}
+            'seeds': {'connection': conn_seed, 'followup': follow_seed},
+            'gsheets': {
+                'creds_json': gs_creds,
+                'spreadsheet_id': gs_sheet,
+                'leads_ws': gs_leads_ws,
+                'report_ws': gs_report_ws
+            }
         }
         save_config(new_cfg)
         load_config.cache_clear()
@@ -63,23 +74,44 @@ with st.expander("⚙️ Configuration"):
         st.success("Configuration saved.")
 
 st.markdown("---")
+if st.button("Login to LinkedIn"):
+    pw, ctx = manual_login()
+    st.session_state["pw"] = pw
+    st.session_state["context"] = ctx
+    st.success("Logged in. Browser context saved.")
+
 cols = st.columns(4)
-if cols[0].button("1. Extract Leads"): extract_all_searches(); st.success("Extraction complete.")
-if cols[1].button("2. Sync to HubSpot"): sync_hubspot(); st.success("Sync complete.")
-if cols[2].button("3. Send Invites"): send_invites(); st.success("Invites sent.")
-if cols[3].button("4. Process Follow-Ups"): process_followups(); st.success("Follow-ups processed.")
-if st.button("5. Push Reporting Metrics"): push_daily_metrics(); st.success("Metrics pushed.")
+if cols[0].button("1. Extract Leads"):
+    extract_all_searches(st.session_state.get("context"))
+    st.success("Extraction complete.")
+if cols[1].button("2. Sync to HubSpot"):
+    sync_hubspot()
+    st.success("Sync complete.")
+if cols[2].button("3. Send Invites"):
+    send_invites(st.session_state.get("context"))
+    st.success("Invites sent.")
+if cols[3].button("4. Process Follow-Ups"):
+    process_followups(st.session_state.get("context"))
+    st.success("Follow-ups processed.")
+if st.button("5. Push Reporting Metrics"):
+    push_daily_metrics()
+    st.success("Metrics pushed.")
 
 st.markdown("### Pipeline Status & Lead Counts")
-conn = sqlite3.connect(DB_FILE)
-meta = conn.execute("SELECT * FROM metadata").fetchone()
+cfg = load_config()
+leads, _ = sheets.get_all_leads(cfg)
+meta_sheet = sheets.get_metadata_sheet(cfg)
+headers = meta_sheet.row_values(1)
+values = meta_sheet.row_values(2)
+meta = dict(zip(headers, values))
 st.write({
-    'Last Extract':   meta[0],
-    'Last Sync':      meta[1],
-    'Last Outreach':  meta[2],
-    'Last Follow-up': meta[3],
-    'Last Report':    meta[4]
+    'Last Extract':   meta.get('last_extract'),
+    'Last Sync':      meta.get('last_sync'),
+    'Last Outreach':  meta.get('last_outreach'),
+    'Last Follow-up': meta.get('last_followup'),
+    'Last Report':    meta.get('last_report')
 })
-status_counts = dict(conn.execute("SELECT status, COUNT(*) FROM leads GROUP BY status").fetchall())
+status_counts = {}
+for l in leads:
+    status_counts[l.get('status','unknown')] = status_counts.get(l.get('status','unknown'),0) + 1
 st.table(status_counts)
-conn.close()

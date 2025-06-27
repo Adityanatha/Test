@@ -5,7 +5,7 @@ A self‑contained, free BDR automation system using:
 - HubSpot CRM API
 - Open‑source LLM (Hugging Face)
 - Streamlit UI dashboard
-- SQLite for local state & reporting
+- Google Sheets for lead storage & reporting
 
 ## Setup
 
@@ -34,20 +34,18 @@ A self‑contained, free BDR automation system using:
    pip install -r requirements.txt
    playwright install
    ```
-5. **Initialize the SQLite database**:
-   ```bash
-   python init_db.py
-   ```
-6. **Create `config.yaml`** by copying `config.example.yaml` and filling in your own credentials, search URLs, messaging seeds, and Google Sheets settings.
-7. **Run the Streamlit dashboard**:
+5. **Create `config.yaml`** by copying `config.example.yaml` and filling in your own credentials, search URLs, messaging seeds, and Google Sheets settings.
+6. **Run the Streamlit dashboard**:
    ```bash
    streamlit run app.py
    ```
+   Then click **Login to LinkedIn** in the app and complete authentication before running other tasks.
 
 ## Usage
 
 Within the UI, you can:
 - Save or update your configuration
+- Login to LinkedIn once per session
 - Extract leads
 - Sync to HubSpot
 - Send connection invites
@@ -62,7 +60,7 @@ For automation, schedule individual module scripts under `modules/` via cron or 
 1. Create a Google Cloud project and enable the Google Sheets API.
 2. Generate a service account and download its credentials JSON file.
 3. Share your spreadsheet with the service account email.
-4. Set `reporting.creds_json`, `reporting.spreadsheet_id`, and `reporting.worksheet` in `config.yaml` accordingly.
+4. Set `gsheets.creds_json`, `gsheets.spreadsheet_id`, and the worksheet names (`leads_ws`, `report_ws`) in `config.yaml` accordingly.
 
 ## License & Usage
 
