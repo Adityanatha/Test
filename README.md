@@ -34,12 +34,17 @@ A self‑contained, free BDR automation system using:
    pip install -r requirements.txt
    playwright install
    ```
-5. **Create `config.yaml`** by copying `config.example.yaml` and filling in your own credentials, search URLs, messaging seeds, and Google Sheets settings.
+5. **Create `config.yaml`** by copying `config.example.yaml` and filling in your
+   own settings. The LinkedIn `username` and `password` values are optional when
+   you log in manually through the dashboard. They are only needed for
+   headless, automated runs of the scripts.
 6. **Run the Streamlit dashboard**:
    ```bash
    streamlit run app.py
    ```
-   Then click **Login to LinkedIn** in the app and complete authentication before running other tasks.
+   Then click **Login to LinkedIn** in the app and complete authentication before
+   running other tasks. If you use this manual login flow, the LinkedIn username
+   and password fields in `config.yaml` can be left blank.
 
 ## Usage
 

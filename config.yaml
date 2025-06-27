@@ -1,5 +1,7 @@
 # Copy this template and fill in your details
 linkedin:
+  # Username and password are only needed when running modules headlessly.
+  # Leave them blank if you log in manually via the dashboard.
   username: "your_email@example.com"
   password: "YOUR_LINKEDIN_PASSWORD"
   searches:
