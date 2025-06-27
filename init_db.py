@@ -1,6 +1,7 @@
-import sqlite3
+import sqlite3, os
 
-DB_FILE = "leads.db"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_FILE = os.path.join(BASE_DIR, "leads.db")
 conn = sqlite3.connect(DB_FILE)
 cur = conn.cursor()
 

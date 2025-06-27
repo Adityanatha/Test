@@ -38,7 +38,7 @@ A self‑contained, free BDR automation system using:
    ```bash
    python init_db.py
    ```
-6. **Configure `config.yaml`** with your LinkedIn, HubSpot, and Hugging Face credentials, search URLs, and messaging seeds.
+6. **Create `config.yaml`** by copying `config.example.yaml` and filling in your own credentials, search URLs, messaging seeds, and Google Sheets settings.
 7. **Run the Streamlit dashboard**:
    ```bash
    streamlit run app.py
@@ -56,3 +56,15 @@ Within the UI, you can:
 - Monitor pipeline status and lead counts
 
 For automation, schedule individual module scripts under `modules/` via cron or Task Scheduler.
+
+## Google Sheets Setup
+
+1. Create a Google Cloud project and enable the Google Sheets API.
+2. Generate a service account and download its credentials JSON file.
+3. Share your spreadsheet with the service account email.
+4. Set `reporting.creds_json`, `reporting.spreadsheet_id`, and `reporting.worksheet` in `config.yaml` accordingly.
+
+## License & Usage
+
+This project is released under the MIT License (see `LICENSE`).
+You are responsible for complying with the Terms of Service of LinkedIn, HubSpot, and any other services you connect to, as well as all local regulations.

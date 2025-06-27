@@ -12,8 +12,9 @@ from modules.message_gen import generate_connection, generate_followup
 from modules.outreach import send_invites, process_followups
 from modules.reporting import push_daily_metrics
 
-CONFIG_FILE = "config.yaml"
-DB_FILE = "leads.db"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CONFIG_FILE = os.path.join(BASE_DIR, "config.yaml")
+DB_FILE = os.path.join(BASE_DIR, "leads.db")
 
 @st.cache_data
 def load_config():
@@ -57,6 +58,8 @@ with st.expander("⚙️ Configuration"):
             'seeds': {'connection': conn_seed, 'followup': follow_seed}
         }
         save_config(new_cfg)
+        load_config.cache_clear()
+        config = load_config()
         st.success("Configuration saved.")
 
 st.markdown("---")
