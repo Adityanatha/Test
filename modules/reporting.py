@@ -1,28 +1,26 @@
-import sqlite3, datetime, gspread, yaml, os
+import datetime, yaml, os
+from modules import sheets
+import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG_FILE = os.path.join(BASE_DIR, "config.yaml")
-DB_FILE = os.path.join(BASE_DIR, "leads.db")
 
 def push_daily_metrics():
     cfg = yaml.safe_load(open(CONFIG_FILE))
-    conn = sqlite3.connect(DB_FILE)
-    cur = conn.cursor()
+    leads, _ = sheets.get_all_leads(cfg)
     today = datetime.date.today().isoformat()
     metrics = {
         'date': today,
-        'new_leads': cur.execute("SELECT COUNT(*) FROM leads WHERE DATE(extracted_at)=?", (today,)).fetchone()[0],
-        'invites': cur.execute("SELECT COUNT(*) FROM leads WHERE DATE(invited_at)=?", (today,)).fetchone()[0],
-        'accepted': cur.execute("SELECT COUNT(*) FROM leads WHERE DATE(connected_at)=?", (today,)).fetchone()[0],
-        'followups': cur.execute("SELECT COUNT(*) FROM leads WHERE DATE(followup_sent_at)=?", (today,)).fetchone()[0]
+        'new_leads': sum(1 for l in leads if l.get('extracted_at','').split('T')[0] == today),
+        'invites': sum(1 for l in leads if l.get('invited_at','').split('T')[0] == today),
+        'accepted': sum(1 for l in leads if l.get('connected_at','').split('T')[0] == today),
+        'followups': sum(1 for l in leads if l.get('followup_sent_at','').split('T')[0] == today)
     }
 
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds = ServiceAccountCredentials.from_json_keyfile_name(cfg['reporting']['creds_json'], scope)
+    creds = ServiceAccountCredentials.from_json_keyfile_name(cfg['gsheets']['creds_json'], scope)
     client = gspread.authorize(creds)
-    sheet = client.open_by_key(cfg['reporting']['spreadsheet_id']).worksheet(cfg['reporting']['worksheet'])
+    sheet = client.open_by_key(cfg['gsheets']['spreadsheet_id']).worksheet(cfg['gsheets']['report_ws'])
     sheet.append_row([metrics['date'], metrics['new_leads'], metrics['invites'], metrics['accepted'], metrics['followups']])
-    cur.execute("UPDATE metadata SET last_report=CURRENT_TIMESTAMP")
-    conn.commit()
-    conn.close()
+    sheets.update_metadata(cfg, 'last_report')
