@@ -78,7 +78,9 @@ def extract_all_searches(context=None):
                     'followup_sent_at': ''
                 })
 
+
                 existing_ids.add(lid)
+                page.wait_for_timeout(2000)
                 print(f"➕ Saved: {name} | {title} | {company}")
 
             except Exception as e:
