@@ -16,7 +16,7 @@ from modules.message_gen import generate_connection, generate_followup
 from modules.outreach import send_invites, process_followups
 from modules.reporting import push_daily_metrics
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 CONFIG_FILE = os.path.join(BASE_DIR, "config.yaml")
 
 @st.cache_data
@@ -74,7 +74,7 @@ with st.expander("⚙️ Configuration"):
         config = load_config()
         st.success("✅ Configuration saved.")
 
-# MAIN BUTTONS
+# MAIN ACTIONS
 st.markdown("---")
 if st.button("Login to LinkedIn"):
     try:
@@ -121,9 +121,8 @@ if st.button("5. Push Reporting Metrics"):
     except Exception as e:
         st.error(f"❌ Reporting failed: {e}")
 
-# DASHBOARD SECTION
+# DASHBOARD STATUS
 st.markdown("### 📊 Pipeline Status & Lead Counts")
-
 try:
     cfg = load_config()
     leads, _ = sheets.get_all_leads(cfg)
@@ -149,3 +148,42 @@ try:
 
 except Exception as e:
     st.error(f"❌ Failed to load dashboard: {e}")
+
+# -------------------------------
+# 🧪 TEST MESSAGE GENERATOR PANEL
+# -------------------------------
+st.markdown("### 🧪 Test Message Generator")
+
+test_col1, test_col2 = st.columns(2)
+lead_name = test_col1.text_input("Name", "Ravi Mehra")
+lead_title = test_col2.text_input("Title", "VP of Engineering")
+lead_company = test_col1.text_input("Company", "Finovate")
+lead_industry = test_col2.text_input("Industry", "Fintech")
+
+category = st.selectbox("Message Category", [
+    "initial_message", "nurture_message", "follow_up_message",
+    "informative_message", "collateral_message", "meeting_message", "contextual_pitch"
+])
+
+chat_history = st.text_area("Chat History", "Connected, no reply yet.")
+leadiq_data = st.text_area("LeadIQ Signals", "Hiring ML engineers, posted about GenAI.")
+pdf_summary = st.text_area("Company PDF Summary", "Finovate is building AI-driven personalization tools.")
+
+if st.button("Generate Test Message"):
+    test_lead = {
+        "name": lead_name,
+        "title": lead_title,
+        "company": lead_company,
+        "industry": lead_industry,
+        "chat_history": chat_history,
+        "leadiq": leadiq_data,
+        "pdf_summary": pdf_summary,
+        "category": category
+    }
+
+    try:
+        message = generate_connection(test_lead)
+        st.success("✅ Message Generated:")
+        st.code(message, language="markdown")
+    except Exception as e:
+        st.error(f"❌ Failed to generate message: {e}")
