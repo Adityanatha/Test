@@ -6,6 +6,7 @@ A self‑contained, free BDR automation system using:
 - Open‑source LLM (Hugging Face)
 - Streamlit UI dashboard
 - Google Sheets for lead storage & reporting
+- Automated Sales Navigator list management (bulk move + scraping by list)
 
 ## Setup
 
