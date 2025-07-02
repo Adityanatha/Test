@@ -46,7 +46,7 @@ def send_invites(context=None):
         print(f"\n🔁 [{i+1}/{len(leads)}] Visiting: {l['name']} ({l['title']} at {l['company']})")
 
         try:
-           # msg = generate_connection({'name': l['name'], 'title': l['title'], 'company': l['company']})
+            msg = generate_connection({'name': l['name'], 'title': l['title'], 'company': l['company']})
             page.goto(l['profile_url'], timeout=30000)
             page.wait_for_timeout(2000)
 
@@ -148,7 +148,6 @@ def process_followups(context=None):
             viewport={"width": 1280, "height": 1080}
         )
         page = context.new_page()
-        page.pause()  # DEBUG: Pause and open devtools
         close_browser = True
 
     for i, l in enumerate(leads):
