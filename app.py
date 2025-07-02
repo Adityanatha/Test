@@ -10,10 +10,11 @@ except ModuleNotFoundError:
 
 from modules import sheets
 from modules.login import manual_login
-from modules.salesnav_extract import extract_all_searches
+from modules.salesnav_extract import extract_all_searches, extract_list
 from modules.hubspot_sync import sync_hubspot
 from modules.message_gen import generate_connection, generate_followup
 from modules.outreach import send_invites, process_followups
+from modules.salesnav_lists import add_search_results_to_list
 from modules.reporting import push_daily_metrics
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -37,6 +38,10 @@ with st.expander("⚙️ Configuration"):
     linkedin_pass = st.text_input("LinkedIn Password", type="password")
     searches_raw = st.text_area("SalesNav Searches (name|url per line)", value="\n".join(
         [f"{s['name']}|{s['url']}" for s in config.get("linkedin", {}).get("searches", [])]))
+    new_list = st.text_input('New Leads List URL', value=config.get('linkedin', {}).get('lists', {}).get('new_leads', ''))
+    invited_list = st.text_input('Invited List URL', value=config.get('linkedin', {}).get('lists', {}).get('invited', ''))
+    connected_list = st.text_input('Connected List URL', value=config.get('linkedin', {}).get('lists', {}).get('connected', ''))
+    bulk_search_url = st.text_input('Search URL to add 100 leads', '')
 
     hub_key = st.text_input("HubSpot API Key", type="password", value=config.get("hubspot", {}).get("api_key", ""))
     hf_token = st.text_input("HuggingFace Token", type="password", value=config.get("huggingface", {}).get("token", ""))
@@ -57,7 +62,16 @@ with st.expander("⚙️ Configuration"):
                 name, url = line.split('|', 1)
                 searches.append({'name': name.strip(), 'url': url.strip()})
         new_cfg = {
-            'linkedin': {'username': linkedin_user, 'password': linkedin_pass, 'searches': searches},
+            'linkedin': {
+                'username': linkedin_user,
+                'password': linkedin_pass,
+                'searches': searches,
+                'lists': {
+                    'new_leads': new_list,
+                    'invited': invited_list,
+                    'connected': connected_list
+                }
+            },
             'hubspot': {'api_key': hub_key},
             'huggingface': {'token': hf_token, 'model': hf_model},
             'rate_limits': {'min_delay_sec': int(min_delay), 'max_delay_sec': int(max_delay)},
@@ -85,10 +99,20 @@ if st.button("Login to LinkedIn"):
     except Exception as e:
         st.error(f"❌ Login failed: {e}")
 
+if st.button('Add Search to New Leads'):
+    try:
+        add_search_results_to_list(bulk_search_url, new_list, st.session_state.get('context'))
+        st.success('✅ Added leads to list.')
+    except Exception as e:
+        st.error(f'❌ Failed to add leads: {e}')
+
 cols = st.columns(4)
 if cols[0].button("1. Extract Leads"):
     try:
-        extract_all_searches(st.session_state.get("context"))
+        if new_list:
+            extract_list(new_list, st.session_state.get("context"))
+        else:
+            extract_all_searches(st.session_state.get("context"))
         st.success("✅ Extraction complete.")
     except Exception as e:
         st.error(f"❌ Extraction failed: {e}")
