@@ -84,7 +84,12 @@ with st.expander("⚙️ Configuration"):
             }
         }
         save_config(new_cfg)
-        load_config.cache_clear()
+        # clear cached config so updates take effect immediately
+        try:
+            load_config.clear()
+        except AttributeError:
+            # fall back in case cache API changes
+            load_config.cache_clear()
         config = load_config()
         st.success("✅ Configuration saved.")
 
