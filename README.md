@@ -66,7 +66,11 @@ For automation, schedule individual module scripts under `modules/` via cron or 
 1. Create a Google Cloud project and enable the Google Sheets API.
 2. Generate a service account and download its credentials JSON file.
 3. Share your spreadsheet with the service account email.
-4. Set `gsheets.creds_json`, `gsheets.spreadsheet_id`, and the worksheet names (`leads_ws`, `report_ws`) in `config.yaml` accordingly. Ensure the path in `gsheets.creds_json` points to a valid JSON key file on the machine running the app.
+4. Place the downloaded credentials file in the `datafiles/` directory and
+   set `gsheets.creds_json` to that relative path (e.g.
+   `datafiles/google-credentials.json`) in `config.yaml`.
+   Also set `gsheets.spreadsheet_id` and worksheet names (`leads_ws`,
+   `report_ws`).
 
 ## License & Usage
 
