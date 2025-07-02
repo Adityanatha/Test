@@ -1,26 +1,65 @@
-# Copy this template and fill in your details
-linkedin:
-  # Username and password are only needed when running modules headlessly.
-  # Leave them blank if you log in manually via the dashboard.
-  username: "your_email@example.com"
-  password: "YOUR_LINKEDIN_PASSWORD"
-  searches:
-    - name: "FinTech CIOs Canada"
-      url: "https://www.linkedin.com/sales/search/people?..."
-hubspot:
-  api_key: "YOUR_HUBSPOT_API_KEY"
-huggingface:
-  token: "YOUR_HUGGINGFACE_TOKEN"
-  model: "meta-llama/Llama-2-7b-chat-hf"
-rate_limits:
-  min_delay_sec: 30
-  max_delay_sec: 90
-seeds:
-  connection: "Hi {{FirstName}}, I noticed…"
-  followup:   "Hello {{FirstName}}, just checking…"
 gsheets:
-  creds_json: "path/to/google-creds.json"
-  spreadsheet_id: "GOOGLE_SHEET_ID"
-  leads_ws: "Leads"
-  report_ws: "Report"
-  metadata_ws: "Metadata"
+  creds_json: /Users/infoobjects/Tools/Test/datafiles/focus-invention-251008-53ba8c8d891e.json
+  leads_ws: Leads
+  report_ws: Report
+  spreadsheet_id: 1CZh1XEXKuqyZYkOAfgMtVvNYzcvv_7zY84z1N6oueIQ
+hubspot:
+  api_key: YOUR_HUBSPOT_API_KEY
+huggingface:
+  model: meta-llama/Llama-2-7b-chat-hf
+  token: YOUR_HUGGINGFACE_TOKEN
+linkedin:
+  lists:
+    new_leads: https://www.linkedin.com/sales/lists/people/NEW_LIST_ID
+    invited: https://www.linkedin.com/sales/lists/people/INVITED_LIST_ID
+    connected: https://www.linkedin.com/sales/lists/people/CONNECTED_LIST_ID
+  password: ''
+  searches:
+  - name: Recommended Leads
+    url: https://www.linkedin.com/sales/lists/people/6959228537564233728?sortCriteria=LAST_ACTIVITY&sortOrder=DESCENDING
+  username: your_email@example.com
+rate_limits:
+  max_delay_sec: 60
+  min_delay_sec: 20
+seeds:
+  connection: "Hi {{FirstName}}, I noticed\u2026"
+  followup: "Hello {{FirstName}}, just checking\u2026"
+
+ollama:
+  model: "mistral:instruct"
+
+categories:
+  initial_message:
+    max_chars: 100
+    tone: "Friendly, no-pressure"
+    goal: "Light intro or thank you after connecting"
+
+  nurture_message:
+    max_chars: 200
+    tone: "Warm, curious"
+    goal: "Keep the conversation alive by asking something relevant"
+
+  follow_up_message:
+    max_chars: 150
+    tone: "Gentle nudge"
+    goal: "Re-engage a lead that hasn’t responded"
+
+  informative_message:
+    max_chars: 300
+    tone: "Insightful, peer-like"
+    goal: "Share a use case or useful idea"
+
+  meeting_message:
+    max_chars: 150
+    tone: "Confident, respectful"
+    goal: "Propose a short meeting if there's interest"
+
+  collateral_message:
+    max_chars: 250
+    tone: "Helpful, neutral"
+    goal: "Share a case study or video with light CTA"
+
+  contextual_pitch:
+    max_chars: 250
+    tone: "Credible, subtle"
+    goal: "Point out value based on their signals without sounding salesy"
