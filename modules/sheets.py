@@ -10,8 +10,16 @@ CONFIG_FILE = os.path.join(BASE_DIR, "config.yaml")
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 
 def _client(cfg):
-    creds = ServiceAccountCredentials.from_json_keyfile_name(cfg['gsheets']['creds_json'], scope)
-    return gspread.authorize(creds)
+    """Return an authorized gspread client or raise a descriptive error."""
+    creds_path = cfg['gsheets']['creds_json']
+    try:
+        creds = ServiceAccountCredentials.from_json_keyfile_name(creds_path, scope)
+        return gspread.authorize(creds)
+    except Exception as e:
+        raise RuntimeError(
+            f"Failed to authenticate with Google Sheets. "
+            f"Check gsheets.creds_json at '{creds_path}': {e}"
+        )
 
 def get_leads_sheet(cfg):
     client = _client(cfg)

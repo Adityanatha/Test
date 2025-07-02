@@ -1,5 +1,9 @@
 # Example configuration for Free BDR Pipeline
 linkedin:
+  lists:
+    new_leads: https://www.linkedin.com/sales/lists/people/NEW_LIST_ID
+    invited: https://www.linkedin.com/sales/lists/people/INVITED_LIST_ID
+    connected: https://www.linkedin.com/sales/lists/people/CONNECTED_LIST_ID
   # Username and password are only required for automated headless runs.
   # They can be omitted when logging in manually via the dashboard.
   username: "your_email@example.com"

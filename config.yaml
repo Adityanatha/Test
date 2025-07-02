@@ -9,6 +9,10 @@ huggingface:
   model: meta-llama/Llama-2-7b-chat-hf
   token: YOUR_HUGGINGFACE_TOKEN
 linkedin:
+  lists:
+    new_leads: https://www.linkedin.com/sales/lists/people/NEW_LIST_ID
+    invited: https://www.linkedin.com/sales/lists/people/INVITED_LIST_ID
+    connected: https://www.linkedin.com/sales/lists/people/CONNECTED_LIST_ID
   password: ''
   searches:
   - name: Recommended Leads

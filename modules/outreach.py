@@ -5,6 +5,7 @@ import os
 import datetime
 import traceback
 from playwright.sync_api import sync_playwright
+from modules.salesnav_lists import move_profile_to_list
 from modules.message_gen import generate_connection, generate_followup
 from modules import sheets
 
@@ -45,7 +46,7 @@ def send_invites(context=None):
         print(f"\n🔁 [{i+1}/{len(leads)}] Visiting: {l['name']} ({l['title']} at {l['company']})")
 
         try:
-           # msg = generate_connection({'name': l['name'], 'title': l['title'], 'company': l['company']})
+            msg = generate_connection({'name': l['name'], 'title': l['title'], 'company': l['company']})
             page.goto(l['profile_url'], timeout=30000)
             page.wait_for_timeout(2000)
 
@@ -101,6 +102,9 @@ def send_invites(context=None):
             sheets.update_lead(sheet, l['_row'], header.index('status') + 1, 'invited')
             sheets.update_lead(sheet, l['_row'], header.index('invited_at') + 1, datetime.datetime.utcnow().isoformat())
 
+            invited_list = cfg.get('linkedin', {}).get('lists', {}).get('invited')
+            if invited_list:
+                move_profile_to_list(page, invited_list)
         except Exception as e:
             print(f"❌ Error inviting {l['name']}: {e}")
             traceback.print_exc()
@@ -144,7 +148,6 @@ def process_followups(context=None):
             viewport={"width": 1280, "height": 1080}
         )
         page = context.new_page()
-        page.pause()  # DEBUG: Pause and open devtools
         close_browser = True
 
     for i, l in enumerate(leads):
