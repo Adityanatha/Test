@@ -1,5 +1,5 @@
 gsheets:
-  creds_json: /Users/infoobjects/Tools/Test/datafiles/focus-invention-251008-53ba8c8d891e.json
+  creds_json: datafiles/google-credentials.json
   leads_ws: Leads
   report_ws: Report
   spreadsheet_id: 1CZh1XEXKuqyZYkOAfgMtVvNYzcvv_7zY84z1N6oueIQ
