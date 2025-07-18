@@ -1,5 +1,5 @@
 gsheets:
-  creds_json: datafiles/google-credentials.json
+  creds_json: /Users/infoobjects/Tools/Test/datafiles/focus-invention-251008-af96d014d45c.json
   leads_ws: Leads
   report_ws: Report
   spreadsheet_id: 1CZh1XEXKuqyZYkOAfgMtVvNYzcvv_7zY84z1N6oueIQ
@@ -10,14 +10,23 @@ huggingface:
   token: YOUR_HUGGINGFACE_TOKEN
 linkedin:
   lists:
-    new_leads: https://www.linkedin.com/sales/lists/people/NEW_LIST_ID
-    invited: https://www.linkedin.com/sales/lists/people/INVITED_LIST_ID
-    connected: https://www.linkedin.com/sales/lists/people/CONNECTED_LIST_ID
+    connected: AI_Connected_Lead
+    invited: AI_Invited_Lead
+    new_leads: AI_New_Lead
+    new_leads_url: https://www.linkedin.com/sales/lists/people/6959228537564233728?sortCriteria=LAST_ACTIVITY&sortOrder=DESCENDING
   password: ''
   searches:
   - name: Recommended Leads
     url: https://www.linkedin.com/sales/lists/people/6959228537564233728?sortCriteria=LAST_ACTIVITY&sortOrder=DESCENDING
+  - name: AI_New_Lead
+    url: https://www.linkedin.com/sales/lists/people/7346564972618969088?sortCriteria=LAST_ACTIVITY&sortOrder=DESCENDING
   username: your_email@example.com
+ollama:
+  model: mistral:instruct
+  models:
+  - mistral:instruct
+  - llama3
+  - deepseek
 rate_limits:
   max_delay_sec: 60
   min_delay_sec: 20
@@ -27,6 +36,8 @@ seeds:
 
 ollama:
   model: "mistral:instruct"
+  models: ["mistral:instruct", "llama3", "deepseek"]
+
 
 categories:
   initial_message:
@@ -63,3 +74,91 @@ categories:
     max_chars: 250
     tone: "Credible, subtle"
     goal: "Point out value based on their signals without sounding salesy"
+
+Software:
+  - Software Development
+  - IT System Custom Software Development
+  - Information Technology & Services
+  - Technology, Information and Internet
+  - Internet Publishing
+  - IT Services and IT Consulting
+  - Mobile Gaming Apps
+  - Business Intelligence Platforms
+  - Professional Training and Coaching
+  - Information Services
+
+Finance:
+  - Financial Services
+  - Banking
+  - Insurance
+  - Venture Capital and Private Equity Principals
+  - Investment Management
+  - Printing Services
+
+Healthcare:
+  - Hospitals and Health Care
+  - Medical Equipment Manufacturing
+  - Pharmaceutical Manufacturing
+  - Biotechnology Research
+  - Medical Practices
+  - Retail Health and Personal Care Products
+  - Wellness and Fitness Services
+
+Education:
+  - Primary and Secondary Education
+  - Higher Education
+  - E-Learning Providers
+  - Research Services
+
+Retail:
+  - Retail
+  - Retail Apparel and Fashion
+  - Retail Furniture and Home Furnishings
+  - Food and Beverage Services
+  - Restaurants
+  - Photography
+  - Food and Beverage Manufacturing
+
+Marketing:
+  - Advertising Services
+  - Market Research
+  - Media Production
+  - Consumer Services
+  - Entertainment Providers
+  - Newspaper Publishing
+
+Real_Estate:
+  - Construction
+
+Logistics:
+  - Transportation, Logistics, Supply Chain and Storage
+  - Truck Transportation
+
+Telecommunications:
+  - Telecommunications
+
+Automotive:
+  - Motor Vehicle Manufacturing
+
+Legal:
+  - Law Practice
+
+Hardware_legacy:
+  - Computer and Network Security
+  - Computer Hardware Manufacturing
+  - Machinery Manufacturing
+  - Manufacturing
+
+Hospitality:
+  - Hospitality
+  - Spectator Sports
+
+Nonprofit:
+  - Non-profit Organizations
+  - Think Tanks
+
+Energy:
+  - Renewables & Environment
+
+# Default fallback for unmatched industries
+default_bucket: general
