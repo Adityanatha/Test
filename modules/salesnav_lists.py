@@ -1,5 +1,6 @@
 from playwright.sync_api import sync_playwright
 import os
+import re
 import time
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -10,7 +11,7 @@ def _get_context(context=None):
     if context:
         return None, context, context.new_page(), False
     p = sync_playwright().start()
-    browser = p.chromium.launch(headless=True, slow_mo=50)
+    browser = p.chromium.launch(headless=False, slow_mo=50)
     ctx = browser.new_context(
         storage_state=STORAGE_STATE,
         viewport={"width": 1280, "height": 1080},
@@ -58,11 +59,24 @@ def add_search_results_to_list(search_url, list_url=None, list_name=None, contex
 
 
             page.wait_for_selector(f"xpath=//ul[contains(@class, '_menu-container_aii1oi')]//button[.//span[text()='{list_name}']]", timeout=5000)
+
             list_option = page.query_selector(f"xpath=//ul[contains(@class, '_menu-container_aii1oi')]//button[.//span[text()='{list_name}']]")
+
+            list_lead_count = page.query_selector(f"xpath=//ul[contains(@class, '_menu-container_aii1oi')]//button[.//span[text()='{list_name}']]//span[2]")
+            count_text = (list_lead_count.text_content() or "").strip() if list_lead_count else "0"
+            m = re.search(r"\d{1,3}(?:,\d{3})*|\d+", count_text)
+            current_count = int(m.group(0).replace(",", "")) if m else 0
+
             if not list_option:
                 print(f"[!] List '{list_name}' not found.")
                 break
+
+            if current_count >= 975:
+                print(f"🛑 Cannot add: List '{list_name}' already has {current_count} ")
+                break
+
             list_option.click()
+            print(f"📊 List '{list_name}' currently has {current_count} leads")
             print(f"[!] Added to '{list_name}'.")
 
             print(f"[+] Leads added to list '{list_name}' on page {pages_processed + 1}")

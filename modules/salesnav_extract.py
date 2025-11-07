@@ -121,7 +121,7 @@ def extract_all_searches(context=None):
     else:
         print("🚀 Launching new browser session")
         p = sync_playwright().start()
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(headless=False)
         context = browser.new_context(storage_state="user_data/state.json", viewport={"width": 1280, "height": 1080})
         page = context.new_page()
         close_browser = True

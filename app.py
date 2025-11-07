@@ -112,7 +112,28 @@ def get_collaterals():
         return collaterals
 
 config = load_config()
+today = datetime.today().date()
+st.success(today)
+
+
+
 st.title("📈 Automated BDR Pipeline")
+
+with st.expander("📁 Files in collateral/ folder", expanded=False):
+    try:
+        if not os.path.exists(COLLATERAL_DIR):
+            st.info("📭 No files found. The collateral/ folder is empty.")
+        else:
+            files = os.listdir(COLLATERAL_DIR)
+            if not files:
+                st.info("📭 No files found in collateral/")
+            else:
+                for f in sorted(files):
+                    file_path = os.path.join(COLLATERAL_DIR, f)
+                    file_size_kb = os.path.getsize(file_path) / 1024
+                    st.markdown(f"📎 `{f}` — `{file_size_kb:.1f} KB`")
+    except Exception as e:
+        st.error(f"❌ Error reading folder: {e}")
 
 with st.expander("📎 Upload New Collateral"):
     col_type = st.selectbox("Type", ["PDF", "Smart Link"])
@@ -499,6 +520,74 @@ if not preview_mode:
             st.error(f"❌ Scheduling failed: {e}")
         finally:
             st.session_state.schedule_clicked = False
+
+#---------------------
+# Schedule Message UI
+#---------------------
+st.title("📡 Outreach Message Scheduler")
+
+# ===========================
+# 📬 SCHEDULED MESSAGES RUNNER
+# ===========================
+with st.expander("📬 Run Scheduled Messages", expanded=True):
+    st.markdown("Send all messages scheduled up to a selected date (including missed ones if needed).")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        run_date = st.date_input("📅 Schedule For", value=today)
+    with col2:
+        max_messages = st.number_input("🔢 Max Messages Per Day", min_value=1, max_value=200, value=100)
+
+    backdate = st.checkbox("⏪ Include Missed (Older) Messages")
+
+    if st.button("🚀 Run Scheduler Now"):
+        scheduler = MessageScheduler(
+            config=config,
+            filters={
+                "max_messages_per_day": max_messages,
+                "backdate": backdate
+            },
+            mode="send_only"  # skip company sheet
+        )
+    with st.spinner("Running message scheduler..."):
+        results = scheduler.run_scheduler(for_date=run_date)
+
+    st.success("✅ Scheduler complete!")
+    st.markdown("### Results")
+    for lid, mid, status in results:
+        st.write(f"• `{lid}` | `{mid}` → {status}")
+
+
+# ===========================
+# 🔥 FORCE SEND MESSAGES
+# ===========================
+with st.expander("🔥 Force Send Messages"):
+    st.markdown("Manually send messages based on filters and a selected message template.")
+
+    # --- Filter Section ---
+    industry = st.text_input("🏭 Filter by Industry (optional)")
+    company = st.text_input("🏢 Filter by Company (optional)")
+    location = st.text_input("📍 Filter by Location (optional)")
+
+    # --- Template Selection ---
+    st.divider()
+    st.markdown("### ✉️ Select Message Template")
+    message_library = get_cached_message_library(config)
+    filtered_templates = [m for m in message_library if m.get("status") == "approved"]
+
+    if not filtered_templates:
+        st.warning("No approved message templates found.")
+    else:
+        template_options = [f"{m['message_id']} - {m['template_text'][:50]}..." for m in filtered_templates]
+        selected_index = st.selectbox("Choose a Template", range(len(template_options)), format_func=lambda i: template_options[i])
+        selected_template = filtered_templates[selected_index]
+
+        scheduled_date = st.date_input("📅 Schedule Date", value=today)
+
+        if st.button("⚠️ Force Send"):
+            st.info("🚧 Force send logic not wired yet — next step: implement `force_send()` using selected filters and template.")
+
+
 
 # -------------------------
 # ✉️ NEW LEAD MESSAGING UI (Enhanced)

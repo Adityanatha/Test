@@ -15,7 +15,7 @@ def enrich_missing_leads(cfg=None, context=None):
 
     if not context:
         p = sync_playwright().start()
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(headless=False)
         context = browser.new_context(storage_state="user_data/state.json")
         page = context.new_page()
         close_browser = True
@@ -37,7 +37,7 @@ def enrich_missing_leads(cfg=None, context=None):
         if extracted_at_str:
             try:
                 extracted_at = datetime.datetime.fromisoformat(extracted_at_str)
-                needs_refresh = (datetime.datetime.utcnow() - extracted_at) > timedelta(days=1)
+                needs_refresh = (datetime.datetime.utcnow() - extracted_at) > timedelta(days=10)
             except Exception:
                 needs_refresh = True
 
@@ -117,7 +117,7 @@ def enrich_missing_leads(cfg=None, context=None):
         if company_row:
             try:
                 last_enriched = datetime.datetime.fromisoformat(company_row.get("enriched_at", ""))
-                needs_company_refresh = (datetime.datetime.utcnow() - last_enriched) > timedelta(days=1)
+                needs_company_refresh = (datetime.datetime.utcnow() - last_enriched) > timedelta(days=10)
             except Exception:
                 needs_company_refresh = True
 
