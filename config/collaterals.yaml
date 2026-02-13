@@ -1,0 +1,95 @@
+- asset_type: case_study
+  description: "This demo showcases an Agentic AI system that helps automotive retailers\
+    \ optimize their sales and inventory strategies using generative intelligence.\
+    \ By analyzing dealership sales data and inventory levels, the AI recommends:\n\
+    \n    \U0001F697 Segment-specific pricing and promotions\n    \U0001F4CD Region-wise\
+    \ sales trends and focus areas\n    \U0001F4E6 Inventory reallocation and reorder\
+    \ optimization\n\nSimply upload your sales and inventory files (or use built-in\
+    \ sample data) and get actionable, strategic insights instantly."
+  industry: automotive_retail
+  name: sale-optimizer
+  type: link
+  url: https://demo.cogence.ai/autoretail/sale-optimizer
+- asset_type: case_study
+  code: 5445cf27
+  description: 'InfoObjects implemented a real-time
+
+    video analytics solution within a multi-
+
+    departmental organization. The
+
+    engagement focused on designing and
+
+    deploying a scalable AI pipeline
+
+    capable of detecting and classifying
+
+    objects from live video streams across
+
+    various business functions. The pipeline
+
+    enabled the client to extract
+
+    operational insights, automate
+
+    monitoring, and lay the groundwork for
+
+    long-term analytics and model
+
+    enhancements.'
+  industry: manufacturing
+  name: InfoObjects GenAI Case Study - Real-Time Visual AI-1
+  path: collateral/5445cf27_InfoObjects GenAI Case Study - Real-Time Visual AI-1.pdf
+  type: pdf
+- asset_type: case_study
+  code: 6b17c5f7
+  description: 'InfoObjects has provided a strategic solution
+
+    to a prominent BFSI client, addressing a
+
+    critical challenge associated with prolonged
+
+    case handling times. The primary issue
+
+    stemmed from the manual labor involved in
+
+    locating and retrieving pertinent documents
+
+    necessary for resolving each case file, which
+
+    significantly extended the resolution
+
+    timeframe and frequently resulted in case
+
+    escalations. To mitigate this issue,
+
+    InfoObjects proposed the implementation of
+
+    an advanced support tool. This innovative
+
+    tool enables agents to efficiently access the
+
+    required information through a simple chat
+
+    interface. By leveraging a sophisticated
+
+    Large Language Model (LLM) at its core, the
+
+    tool ensures the delivery of precise and
+
+    relevant information to the agents, thereby
+
+    streamlining the case resolution process.'
+  industry: financial_services
+  name: infoObjects_CaseStudyBFSI-GenAI_RAG.pdf
+  path: collateral/6b17c5f7_infoObjects_CaseStudyBFSI-GenAI_RAG.pdf
+  type: pdf
+- asset_type: benchmark
+  code: ae023a3d
+  description: ' Internal playbook with best-practice message templates for RAG, Fine-tuning,
+    GenAI, legacy modernization, and various advisory asks. Includes use-case-specific
+    messaging language and links to supporting case studies.'
+  industry: general
+  name: BDR Messaging Best Practice
+  path: collateral/ae023a3d_BDR_Messaging.docx-1.pdf
+  type: pdf

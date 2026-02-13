@@ -12,11 +12,10 @@ from modules import sheets
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG_FILE = os.path.join(BASE_DIR, "config.yaml")
 
-
 def send_invites(context=None):
     print("\n▶️ Starting invite process...")
     cfg = yaml.safe_load(open(CONFIG_FILE))
-    leads, sheet = sheets.get_all_leads(cfg)
+    leads, _ = sheets.get_all_leads(cfg)
     leads = [l for l in leads if l.get('status') == 'new']
     print(f"🔍 Found {len(leads)} leads marked as 'new'.")
 
@@ -24,15 +23,13 @@ def send_invites(context=None):
         print("❌ No leads to process. Exiting early.")
         return
 
-    header = sheet.row_values(1)
-
     if context:
         print("🔐 Using existing login context")
         page = context.new_page()
         close_browser = False
         p = None
     else:
-        print("🌐 Launching new browser session...")
+        print("🚀 Launching new browser session...")
         p = sync_playwright().start()
         browser = p.chromium.launch(headless=False)
         context = browser.new_context(
@@ -46,41 +43,64 @@ def send_invites(context=None):
         print(f"\n🔁 [{i+1}/{len(leads)}] Visiting: {l['name']} ({l['title']} at {l['company']})")
 
         try:
-           # msg = generate_connection({'name': l['name'], 'title': l['title'], 'company': l['company']})
             page.goto(l['profile_url'], timeout=30000)
+            page.wait_for_selector('button[aria-label="Open actions overflow menu"]', timeout=10000)
             page.wait_for_timeout(2000)
 
-            # 🔍 Get connection degree
             connection_label_el = page.query_selector('._name-sublabel--no-pronunciation_sqh8tm span:nth-child(2)')
             connection_degree = connection_label_el.text_content().strip() if connection_label_el else "N/A"
             print(f"🔗 Connection degree: {connection_degree}")
 
-            connect_btn = None
-
             if connection_degree == "1st":
-                page.wait_for_timeout(2000)
-                print("⚡ Skipping invite: Already a 1st-degree connection.")
-                sheets.update_lead(sheet, l['_row'], header.index('status') + 1, 'connected')
+                print("⚡️ Skipping invite: Already a 1st-degree connection.")
+                l['status'] = 'connected'
+                sheets.update_lead(cfg, l)
                 continue
-            else:
-                page.wait_for_timeout(2000)
-                print("📎 Not a 1st-degree — opening More menu to find Connect.")
-                dropdown_btn = page.query_selector('button[aria-label="Open actions overflow menu"]')
-                if dropdown_btn:
-                    dropdown_btn.click()
-                    page.wait_for_timeout(1000)
-                    connect_btn = page.query_selector("button:has-text('Connect')")
 
+            # Check if "Connect — Pending" button is visible
+            pending_btn = page.query_selector('//button[@disabled][div/div[text()="Connect — Pending"]]')
+            if pending_btn:
+                print(f"⏳ Connect already pending for {l['name']}. Marking as invited.")
+                l['status'] = 'invited'
+                l['invited_at'] = datetime.datetime.utcnow().isoformat()
+                sheets.update_lead(cfg, l)
+                continue
+
+            print("📌 Not a 1st-degree — opening More menu to find Connect.")
+            dropdown_btn = page.query_selector('button[aria-label="Open actions overflow menu"]')
+            if dropdown_btn:
+                dropdown_btn.click()
+                page.wait_for_timeout(1000)
+
+            connect_btn = page.query_selector("button:has-text('Connect')")
             if not connect_btn:
                 print("❌ Connect button not found. Skipping.")
+                continue
+
+            if not connect_btn.is_enabled():
+                print(f"⚠️ Connect button for {l['name']} is disabled. Marking as invited.")
+                l['status'] = 'invited'
+                l['invited_at'] = datetime.datetime.utcnow().isoformat()
+                sheets.update_lead(cfg, l)
                 continue
 
             connect_btn.click()
             page.wait_for_timeout(1500)
 
+            # Check if email input is shown — means invite can't be sent
+            email_input = page.query_selector("input#connect-cta-form__email")
+            if email_input:
+                print(f"📩 Email required to connect with {l['name']}. Marking as email_needed.")
+                l['status'] = 'email_needed'
+                l['invited_at'] = datetime.datetime.utcnow().isoformat()
+                sheets.update_lead(cfg, l)
+                continue
+
+
             note_btn = page.query_selector("button:has-text('Add a note')")
             if note_btn:
                 note_btn.click()
+                msg = generate_connection({'name': l['name'], 'title': l['title'], 'company': l['company']}, cfg)
                 page.fill("textarea", msg)
                 send_btn = page.query_selector("button:has-text('Send')")
                 if send_btn:
@@ -98,13 +118,14 @@ def send_invites(context=None):
                     print("❌ Couldn't send invite. Skipping.")
                     continue
 
-            # ✅ Update Sheet
-            sheets.update_lead(sheet, l['_row'], header.index('status') + 1, 'invited')
-            sheets.update_lead(sheet, l['_row'], header.index('invited_at') + 1, datetime.datetime.utcnow().isoformat())
+            l['status'] = 'invited'
+            l['invited_at'] = datetime.datetime.utcnow().isoformat()
+            sheets.update_lead(cfg, l)
 
             invited_list = cfg.get('linkedin', {}).get('lists', {}).get('invited')
             if invited_list:
                 move_profile_to_list(page, invited_list)
+
         except Exception as e:
             print(f"❌ Error inviting {l['name']}: {e}")
             traceback.print_exc()
@@ -122,9 +143,9 @@ def send_invites(context=None):
 
 
 def process_followups(context=None):
-    print("\n▶️ Starting follow-up process...")
+    print("\n🔁 Starting follow-up process...")
     cfg = yaml.safe_load(open(CONFIG_FILE))
-    leads, sheet = sheets.get_all_leads(cfg)
+    leads, _ = sheets.get_all_leads(cfg)
     leads = [l for l in leads if l.get('status') == 'connected' and not l.get('followup_sent_at')]
     print(f"🔍 Found {len(leads)} leads eligible for follow-up.")
 
@@ -132,15 +153,13 @@ def process_followups(context=None):
         print("❌ No connections to follow up with. Exiting.")
         return
 
-    header = sheet.row_values(1)
-
     if context:
         print("🔐 Using existing login context")
         page = context.new_page()
         close_browser = False
         p = None
     else:
-        print("🌐 Launching new browser session...")
+        print("🚀 Launching new browser session...")
         p = sync_playwright().start()
         browser = p.chromium.launch(headless=False)
         context = browser.new_context(
@@ -148,7 +167,6 @@ def process_followups(context=None):
             viewport={"width": 1280, "height": 1080}
         )
         page = context.new_page()
-        page.pause()  # DEBUG: Pause and open devtools
         close_browser = True
 
     for i, l in enumerate(leads):
@@ -172,7 +190,8 @@ def process_followups(context=None):
             if send_btn:
                 send_btn.click()
                 print(f"📨 Follow-up sent to: {l['name']}")
-                sheets.update_lead(sheet, l['_row'], header.index('followup_sent_at') + 1, datetime.datetime.utcnow().isoformat())
+                l['followup_sent_at'] = datetime.datetime.utcnow().isoformat()
+                sheets.update_lead(cfg, l)
             else:
                 print("❌ Send button not found after typing message.")
 
