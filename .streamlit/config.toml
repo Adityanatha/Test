@@ -1,0 +1,9 @@
+[theme]
+base="light"
+
+primaryColor="#2BB673"              # Certain green
+backgroundColor="#F7F9FC"           # Soft cloud background
+secondaryBackgroundColor="#FFFFFF"  # Card surface
+textColor="#0F2A4A"                 # Deep navy text
+
+font="sans serif"

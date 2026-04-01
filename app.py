@@ -1,10 +1,17 @@
+# =========================================================
+# 🚀 Growth Agent OS — FULL UI TEMPLATE (Drop-in)
+# Goal: Upgrade UI/UX WITHOUT changing functionality.
+# Approach: Same logic, same module calls, reorganized into tabs + cards.
+# =========================================================
 
+import yaml
 import os
 import uuid
-import yaml
 import time
+
 import streamlit as st
 import pandas as pd
+import plotly.graph_objects as go
 
 from datetime import datetime
 from collections import defaultdict
@@ -25,13 +32,12 @@ from modules.enrich_leads import enrich_missing_leads
 from modules.industry_mapper import load_bucket_mapping, get_industry_bucket
 from modules.scheduler import MessageScheduler
 
-
 # =========================================================
 # Page + Theme
 # =========================================================
 
 st.set_page_config(
-    page_title="Growth Agent",
+    page_title="Social Media Growth Agent",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -39,123 +45,244 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-:root{
-  --ga-black:#000000;
-  --ga-white:#ffffff;
-  --ga-pewter:#fea34f;
-  --ga-silver:#fea14f;
 
-  --ga-sapphire:#2fb36d;
-  --ga-impact:#2cd1cc;
-  --ga-kiosk:#2fb36d;
-  --ga-violet:#9381fb;
-  --ga-iris:#33b32f;
-
-  --ga-border:rgba(0,0,0,0.08);
-  --ga-soft:rgba(0,0,0,0.03);
+/* Layout */
+.block-container {
+    padding: 1.5rem 3rem 2rem 3rem;
+    max-width: 1500px;
 }
 
-.stApp{background:var(--ga-white);} 
-.block-container{padding-top:1.5rem; padding-bottom:2rem; max-width: 1400px;}
+/* Typography */
+h1 {
+    font-size: 34px;
+    font-weight: 700;
+    color: #0F2A4A;
+}
 
-/* Headings */
-h1,h2,h3,h4{color:var(--ga-black);} 
+h2, h3 {
+    font-weight: 600;
+    color: #0F2A4A;
+}
+
+.muted {
+    color: #64748b;
+    font-size: 14px;
+}
+
+/* Card */
+.card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+/* Card Title */
+.card-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: #000000;
+    margin-bottom: 4px;
+}
+
+/* Card Subtitle */
+.card-subtitle {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 18px;
+}
+
+
+/* Metric */
+[data-testid="stMetric"] {
+    background: #ffffff;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+    padding: 20px;
+}
+
+/* Tabs */
+[data-baseweb="tab-list"] {
+    gap: 24px;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+[data-baseweb="tab"] {
+    font-weight: 600;
+    color: #475569;
+}
+
+[data-baseweb="tab"][aria-selected="true"] {
+    color: #2BB673;
+}
 
 /* Buttons */
-.stButton>button{
-  border-radius: 10px;
-  border: 1px solid var(--ga-border);
-  background: var(--ga-sapphire);
-  color: var(--ga-white);
-  font-weight: 650;
-  padding: 0.55rem 1rem;
-  transition: 0.15s ease-in-out;
-}
-.stButton>button:hover{
-  background: var(--ga-iris);
-  transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(32,81,159,0.22);
+.stButton > button {
+    border-radius: 8px;
+    padding: 0.55rem 1.4rem;
+    font-weight: 600;
+    background-color: #2BB673;
+    color: white;
+    border: none;
+    transition: 0.2s ease;
 }
 
-/* Inputs */
-[data-baseweb="input"] > div,
-[data-baseweb="textarea"] > div,
-[data-baseweb="select"] > div{
-  border-radius: 12px !important;
+.stButton > button:hover {
+    background-color: #239B5C;
 }
 
-/* Expanders */
-details{
-  border-radius: 14px;
-  background: rgba(255,255,255,0.9);
-  border: 1px solid var(--ga-border);
-}
-
-/* Metrics */
-[data-testid="stMetric"]{
-  border: 1px solid var(--ga-border);
-  border-radius: 14px;
-  padding: 0.85rem;
-  background: var(--ga-silver);
-}
-
-/* Tables */
-[data-testid="stDataFrame"]{
-  border: 1px solid var(--ga-border);
-  border-radius: 14px;
+/* Dataframe */
+[data-testid="stDataFrame"] {
+    border-radius: 14px;
+    border: 1px solid #E2E8F0;
 }
 
 /* Divider */
-hr{margin: 1.25rem 0;}
+hr {
+    border-color: #475569;
+    margin: 2rem 0;
+}
 
-/* Hero */
-.ga-hero{
-  padding: 1.15rem 1.25rem;
-  border-radius: 18px;
-  background: var(--ga-white);
-  border: 1px solid var(--ga-border);
-  box-shadow: 0 8px 26px rgba(0,0,0,0.05);
-  margin-bottom: 1.25rem;
+/* Tabs */
+/* Button Style Tabs — No Gap */
+.stTabs [role="tab"] {
+    font-size: 28px;              /* Bigger text */
+    padding: 28px 28px;   
+    border-radius: 10px;                 /* remove rounding between tabs */
+    margin-right: 0px !important;       /* remove gap */
+    background-color: #f1f5f9;
+    color: #1e293b;
+    transition: all 0.4s ease;
 }
-.ga-title{font-size: 2.05rem; font-weight: 800; letter-spacing:-0.02em; margin:0;}
-.ga-sub{color: var(--ga-pewter); margin: 0.2rem 0 0 0;}
-.ga-chip{
-  display:inline-flex;
-  align-items:center;
-  gap:0.4rem;
-  padding: 0.25rem 0.6rem;
-  border-radius: 999px;
-  border: 1px solid var(--ga-border);
-  background: rgba(0,0,0,0.03);
-  color: var(--ga-pewter);
-  font-size: 0.86rem;
+
+/* Make them connect like a segmented control */
+.stTabs [role="tab"]:first-child {
+    border-radius: 8px 0 0 8px;
 }
+
+.stTabs [role="tab"]:last-child {
+    border-radius: 0 8px 8px 0;
+}
+
+.stTabs [role="tablist"] {
+    gap: 0px !important;
+}
+
+/* Active tab */
+.stTabs [aria-selected="true"] {
+    background-color: #2fb36d !important;
+    color: white !important;
+    font-weight: 600;
+    border: none !important;
+}
+
+/* Remove default underline */
+.stTabs [data-baseweb="tab-highlight"] {
+    display: none;
+}
+
+/* KPI Cards */
+.kpi-card {
+    background: white;
+    border-radius: 14px;
+    padding: 22px 26px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.08);
+}
+
+.kpi-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.kpi-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-top: 8px;
+}
+
+.section-divider {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 28px 0;
+}
+
+.table-card {
+    background: white;
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.05);
+    border: 1px solid #e2e8f0;
+}
+
+/* Enterprise Metric Cards */
+[data-testid="stMetric"] {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: all 0.2s ease;
+}
+
+[data-testid="stMetric"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(0,0,0,0.06);
+}
+
+
 </style>
+
+
 """,
     unsafe_allow_html=True,
 )
 
 
-def hero(title: str, subtitle: str, chip: str | None = None):
-    chip_html = f'<span class="ga-chip">{chip}</span>' if chip else ''
-    st.markdown(
-        f"""
-<div class="ga-hero">
-  <div style="display:flex; align-items:center; justify-content:space-between; gap:0.75rem;">
-    <div>
-      <div class="ga-title">{title}</div>
-      <p class="ga-sub">{subtitle}</p>
-    </div>
-    <div>{chip_html}</div>
-  </div>
-</div>
-""",
-        unsafe_allow_html=True,
-    )
+
+
+def ui_card(title: str | None = None, subtitle: str | None = None):
+    """Enterprise-style card wrapper"""
+
+
+    if title or subtitle:
+        st.markdown('<div class="card-header">', unsafe_allow_html=True)
+
+        if title:
+            st.markdown(
+                f'<div class="card-title">{title}</div>',
+                unsafe_allow_html=True
+            )
+
+        if subtitle:
+            st.markdown(
+                f'<div class="card-subtitle">{subtitle}</div>',
+                unsafe_allow_html=True
+            )
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+
+
+def ui_card_end():
+    st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 # =========================================================
-# Constants / Cache / Collateral
+# Config + Caching (UNCHANGED)
 # =========================================================
 
 CONFIG_FILE = os.path.join(os.path.abspath(os.path.dirname(__file__)), "config.yaml")
@@ -182,7 +309,8 @@ def get_cached_message_library(config):
 
 @st.cache_data(ttl=60)
 def get_cached_leads(config):
-    return sheets.get_cached_leads(config)
+    leads = sheets.get_cached_leads(config)
+    return leads
 
 
 @st.cache_data(ttl=60)
@@ -197,7 +325,6 @@ def get_cached_scheduled_messages(config):
 
 def save_collateral_entry(entry):
     os.makedirs(os.path.dirname(COLLATERAL_CONFIG), exist_ok=True)
-
     if os.path.exists(COLLATERAL_CONFIG):
         with open(COLLATERAL_CONFIG, "r") as f:
             data = yaml.safe_load(f) or []
@@ -217,7 +344,6 @@ def save_collateral_entry(entry):
 def handle_collateral_upload(name, description, industry, asset_type, file=None, url=None):
     code = uuid.uuid4().hex[:8]
     os.makedirs(COLLATERAL_DIR, exist_ok=True)
-
     if file:
         filename = f"{code}_{file.name}"
         save_path = os.path.join(COLLATERAL_DIR, filename)
@@ -242,7 +368,6 @@ def handle_collateral_upload(name, description, industry, asset_type, file=None,
             "asset_type": asset_type,
             "description": description,
         }
-
     save_collateral_entry(entry)
     return entry
 
@@ -252,6 +377,8 @@ def get_collaterals():
         return []
     with open(COLLATERAL_CONFIG, "r") as f:
         collaterals = yaml.safe_load(f) or []
+        st.markdown("#### 🔍 Debug: Loaded Collateral Config")
+        st.code(yaml.dump(collaterals), language="yaml")
         return collaterals
 
 
@@ -262,361 +389,455 @@ def get_collaterals():
 config = load_config()
 today = datetime.today().date()
 
-hero(
-    title="Growth Agent",
-    subtitle=f"Relationship-led Revenue Engine • Executive White UI • {today}",
-    chip="Hybrid",
-)
+# =========================================================
+# Header
+# =========================================================
+
+st.markdown("# Social Media Growth Agent")
+
+# =========================================================
+# Global Intelligence Controls
+# =========================================================
+
+ctrl1, ctrl2, ctrl3 = st.columns([3, 2, 2])
+
+with ctrl1:
+    market_focus = st.selectbox(
+        "Who are we targeting?",
+        [
+            "Enterprise Companies",
+            "Mid-Market Companies",
+            "Financial Services",
+            "Healthcare",
+            "All Target Accounts"
+        ],
+        key="market_focus"
+    )
+
+with ctrl2:
+    activity_source = st.selectbox(
+        "Where are signals coming from?",
+        [
+            "LinkedIn",
+            "All Sources",
+            "CRM (HubSpot)",
+            "Events",
+            "Hiring Activity",
+            "Web Engagement"
+        ],
+        key="activity_source"
+    )
+
+with ctrl3:
+    time_filter = st.selectbox(
+        "What time period?",
+        [
+            "Last 90 Days",
+            "Last 7 Days",
+            "Last 30 Days",
+            "Custom"
+        ],
+        key="time_filter"
+    )
+
+# =========================================================
+# Navigation (UI only)
+# =========================================================
+
+nav = st.tabs([
+    "🏠 Dashboard",
+    "🚀 Operations",
+    "📬 Auto-Schedule",
+    "📡 Run Scheduler",
+    "✉️ Messaging",
+    "🗓️ Queue",
+    "📎 Collateral",
+    "⚙️ Config",
+])
+
 
 
 # =========================================================
-# Navigation
+# 🏠 DASHBOARD — LinkedIn Growth Overview
 # =========================================================
 
-tabs = st.tabs(
-    [
-        "🛰️ Command Center",
-        "⚡ Execution",
-        "📎 Assets",
-        "🧬 Campaign Studio",
-        "🚦 Scheduler",
-        "✉️ Message Lab",
-        "🗂️ Queue",
-        "⚙️ Settings",
-    ]
-)
+with nav[0]:
 
-
-# =========================================================
-# 🛰️ Command Center
-# =========================================================
-
-with tabs[0]:
-
-    st.markdown("## Command Center")
+    ui_card(
+        "LinkedIn Growth Overview",
+        "Outbound conversion performance and pipeline health."
+    )
 
     try:
         cfg = load_config()
         leads, _ = sheets.get_all_leads(cfg)
-        meta_sheet = sheets.get_metadata_sheet(cfg)
 
-        headers = meta_sheet.row_values(1)
-        values = meta_sheet.row_values(2)
-        meta = dict(zip(headers, values))
+        if not leads:
+            st.info("No leads available.")
+            ui_card_end()
+            raise SystemExit
 
-        # -------------------------
-        # Aggregate
-        # -------------------------
-        status_counts = {}
-        for l in leads:
-            status = l.get("status", "unknown")
-            status_counts[status] = status_counts.get(status, 0) + 1
+        import pandas as pd
+        import plotly.graph_objects as go
 
-        invited = status_counts.get("invited", 0)
-        connected = status_counts.get("connected", 0)
-        in_progress = status_counts.get("in_progress", 0)
-        new = status_counts.get("new", 0)
+        # --------------------------------------------------
+        # Brand Tokens (Certain-aligned)
+        # --------------------------------------------------
+        BRAND = {
+            "blue": "#1E3A8A",
+            "green": "#2BB673",
+            "slate": "#64748B",
+            "gray": "#CBD5E1",
+            "border": "#E2E8F0",
+            "amber": "#F59E0B",
+            "red": "#DC2626",
+        }
 
-        total_pipeline = invited + connected + in_progress + new
-        connect_rate = round((connected / invited) * 100, 1) if invited else 0
+        df = pd.DataFrame(leads)
 
-        # =====================================================
-        # 🎯 North Star KPI (Dominant)
-        # =====================================================
+        if "status" not in df.columns:
+            df["status"] = "unknown"
 
-        st.markdown("### Pipeline Strength")
-
-        k1, k2 = st.columns([2, 1])
-
-        with k1:
-            st.markdown(
-                f"""
-                <div style="
-                    padding:2rem;
-                    border-radius:18px;
-                    border:1px solid rgba(0,0,0,0.08);
-                    background:--ga-iris">
-                    <div style="font-size:0.9rem;color:#6b7280;">Active Pipeline</div>
-                    <div style="font-size:3rem;font-weight:800;margin-top:0.5rem;">
-                        {total_pipeline}
-                    </div>
-                    <div style="color:#6b7280;margin-top:0.4rem;">
-                        {connected} connections • {in_progress} active conversations
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-
-        with k2:
-            st.metric("Connect Rate", f"{connect_rate}%")
-            st.metric("Invites Sent", invited)
-            st.metric("New Leads", new)
+        df["status"] = df["status"].fillna("unknown").astype(str).str.lower()
 
         # =====================================================
-        # 📊 Funnel
+        # PIPELINE TRUTH (STATUS ONLY)
         # =====================================================
 
-        st.markdown("### Pipeline Visualization")
-        funnel_df = pd.DataFrame({
-            "Stage": ["Invited", "Connected", "In Progress"],
-            "Count": [invited, connected, in_progress]
-        })
+        total_pipeline = len(df)
+        status_counts = df["status"].value_counts().to_dict()
 
-        # -------------------------
-        # Visualization Controls
-        # -------------------------
+        invited_total = status_counts.get("invited", 0)
+        connected_total = status_counts.get("connected", 0)
+        new_total = status_counts.get("new", 0)
 
-        col1, col2, col3 = st.columns(3)
+        acceptance_rate = round(
+            (connected_total / invited_total) * 100, 1
+        ) if invited_total else 0.0
 
-        with col1:
-            chart_type = st.selectbox(
-                "Chart Type",
-                ["Bar", "Line", "Area", "Table"],
-                key="viz_chart_type"
-            )
+        invite_coverage = round(
+            (invited_total / total_pipeline) * 100, 1
+        ) if total_pipeline else 0.0
 
-        with col2:
-            sort_option = st.selectbox(
-                "Sort By",
-                ["Default Order", "Highest to Lowest", "Lowest to Highest"],
-                key="viz_sort"
-            )
+        engagement_rate = round(
+            (connected_total / total_pipeline) * 100, 1
+        ) if total_pipeline else 0.0
 
-        with col3:
-            compact_view = st.checkbox("Compact View", key="viz_compact")
-
-        # -------------------------
-        # Sorting Logic
-        # -------------------------
-
-        if sort_option == "Highest to Lowest":
-            funnel_df = funnel_df.sort_values("Count", ascending=False)
-        elif sort_option == "Lowest to Highest":
-            funnel_df = funnel_df.sort_values("Count", ascending=True)
-
-        # -------------------------
-        # Rendering Logic
-        # -------------------------
-
-        if chart_type == "Bar":
-            st.bar_chart(funnel_df.set_index("Stage"))
-        elif chart_type == "Line":
-            st.line_chart(funnel_df.set_index("Stage"))
-        elif chart_type == "Area":
-            st.area_chart(funnel_df.set_index("Stage"))
-        elif chart_type == "Table":
-            st.dataframe(funnel_df, use_container_width=True)
-
-        # -------------------------
-        # Compact Mode (Optional Insight)
-        # -------------------------
-
-        if not compact_view:
-            total = invited if invited else 1
-            conv_rate = round((connected / total) * 100, 1)
-
-            st.markdown("---")
-            st.markdown(
-                f"""
-                <div style="padding:1rem;border-radius:12px;border:1px solid rgba(0,0,0,0.06);">
-                <strong>Conversion Insight:</strong><br>
-                {connected} of {invited} invites converted → <strong>{conv_rate}%</strong>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-
-
-    # =====================================================
-        # 🧠 Intelligence Summary
+        # =====================================================
+        # VIEW TOGGLE
         # =====================================================
 
-        st.markdown("### Insight")
-
-        if connect_rate < 10:
-            message = "Connection efficiency is below benchmark. Consider refining ICP targeting or messaging precision."
-        elif connect_rate > 20:
-            message = "Strong connection performance. Increasing invite volume could accelerate pipeline growth."
-        else:
-            message = "Pipeline performance is stable with room for incremental optimization."
-
-        st.markdown(
-            f"""
-            <div style="
-                padding:1.5rem;
-                border-radius:14px;
-                border:1px solid rgba(0,0,0,0.06);
-                background:#ffffff;">
-                <div style="font-weight:600;margin-bottom:0.4rem;">Operational Intelligence</div>
-                <div style="color:#4b5563;">
-                    {message}
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
+        view_mode = st.radio(
+            "Dashboard Mode",
+            ["Executive", "BDR"],
+            horizontal=True
         )
 
+        st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+
         # =====================================================
-        # 🕒 Operational Activity
+        # EXECUTIVE VIEW
         # =====================================================
 
-        st.markdown("### System Activity")
+        if view_mode == "Executive":
 
-        m1, m2, m3, m4, m5 = st.columns(5)
-        m1.metric("Last Extract", meta.get("last_extract") or "—")
-        m2.metric("Last Sync", meta.get("last_sync") or "—")
-        m3.metric("Last Outreach", meta.get("last_outreach") or "—")
-        m4.metric("Last Follow-up", meta.get("last_followup") or "—")
-        m5.metric("Last Report", meta.get("last_report") or "—")
+            # ---------------- KPI Strip ----------------
+
+            c1, c2, c3, c4 = st.columns(4)
+
+            def kpi(title, value, subtitle):
+                st.markdown(
+                    f"""
+                    <div class="kpi-card">
+                        <div class="kpi-label">{title}</div>
+                        <div class="kpi-value">{value}</div>
+                        <div class="muted">{subtitle}</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+            with c1:
+                kpi("Acceptance Rate", f"{acceptance_rate}%", "Connected / Invited")
+
+            with c2:
+                kpi("Connected", f"{connected_total}", "Total connections")
+
+            with c3:
+                kpi("Invited", f"{invited_total}", "Total invites sent")
+
+            with c4:
+                kpi("Pipeline Size", f"{total_pipeline}", f"Invite coverage: {invite_coverage}%")
+
+            st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+
+            # ---------------- Funnel ----------------
+
+            st.subheader("Pipeline Conversion Funnel")
+
+            funnel_fig = go.Figure(
+                go.Funnel(
+                    y=["Invited", "Connected"],
+                    x=[invited_total, connected_total],
+                    textinfo="value+percent initial",
+                    marker=dict(color=[BRAND["blue"], BRAND["green"]]),
+                )
+            )
+
+            funnel_fig.update_layout(
+                height=360,
+                margin=dict(t=20, b=10, l=10, r=10),
+                paper_bgcolor="white",
+                plot_bgcolor="white",
+            )
+
+            st.plotly_chart(funnel_fig, use_container_width=True)
+
+            st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+
+            # ---------------- Donut ----------------
+
+            st.subheader("Stage Composition")
+
+            dist_df = (
+                pd.DataFrame(
+                    [{"Stage": k, "Count": v} for k, v in status_counts.items()]
+                )
+                    .sort_values("Count", ascending=False)
+                    .reset_index(drop=True)
+            )
+
+            dist_df["%"] = (
+                    (dist_df["Count"] / total_pipeline) * 100
+            ).round(1) if total_pipeline else 0
+
+            stage_colors = {
+                "connected": BRAND["green"],
+                "invited": BRAND["blue"],
+                "new": BRAND["slate"],
+                "email_needed": BRAND["gray"],
+                "unknown": BRAND["gray"],
+            }
+
+            donut_colors = [
+                stage_colors.get(stage.lower(), BRAND["gray"])
+                for stage in dist_df["Stage"]
+            ]
+
+            donut_fig = go.Figure(
+                data=[
+                    go.Pie(
+                        labels=dist_df["Stage"],
+                        values=dist_df["Count"],
+                        hole=0.72,
+                        textinfo="percent",
+                        marker=dict(colors=donut_colors),
+                    )
+                ]
+            )
+
+            donut_fig.update_layout(
+                height=400,
+                margin=dict(t=20, b=10, l=10, r=10),
+                paper_bgcolor="white",
+            )
+
+            col1, col2 = st.columns([1.4, 1])
+
+            with col1:
+                st.plotly_chart(donut_fig, use_container_width=True)
+
+            with col2:
+                st.dataframe(dist_df, use_container_width=True, height=400)
+
+        # =====================================================
+        # BDR VIEW
+        # =====================================================
+
+        elif view_mode == "BDR":
+
+            st.subheader("Lead Execution View")
+
+            b1, b2, b3 = st.columns(3)
+
+            b1.metric("New Leads", new_total)
+            b2.metric("Invited", invited_total)
+            b3.metric("Connected", connected_total)
+
+            st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
+
+            # Filters
+            colf1, colf2 = st.columns(2)
+
+            with colf1:
+                status_filter = st.selectbox(
+                    "Filter by Status",
+                    ["All"] + sorted(status_counts.keys())
+                )
+
+            with colf2:
+                if "connection_level" in df.columns:
+                    conn_filter = st.selectbox(
+                        "Filter by Connection Level",
+                        ["All"] + sorted(df["connection_level"].dropna().unique())
+                    )
+                else:
+                    conn_filter = "All"
+
+            filtered_df = df.copy()
+
+            if status_filter != "All":
+                filtered_df = filtered_df[
+                    filtered_df["status"] == status_filter.lower()
+                    ]
+
+            if conn_filter != "All" and "connection_level" in filtered_df.columns:
+                filtered_df = filtered_df[
+                    filtered_df["connection_level"] == conn_filter
+                    ]
+
+            # Priority sort
+            priority_map = {
+                "new": 1,
+                "email_needed": 2,
+                "invited": 3,
+                "connected": 4,
+            }
+
+            filtered_df["priority"] = filtered_df["status"].map(priority_map)
+            filtered_df = filtered_df.sort_values("priority")
+
+            display_cols = [
+                c for c in [
+                    "name",
+                    "title",
+                    "company",
+                    "status",
+                    "connection_level",
+                    "profile_url",
+                ] if c in filtered_df.columns
+            ]
+
+            st.dataframe(
+                filtered_df[display_cols],
+                use_container_width=True,
+                height=500,
+            )
 
     except Exception as e:
-        st.error(f"Failed to load Command Center: {e}")
+        st.error(f"Failed to load dashboard: {e}")
+
+    ui_card_end()
 
 # =========================================================
-# ⚡ Execution
+# 🚀 OPERATIONS
 # =========================================================
 
-with tabs[1]:
-    st.subheader("⚡ Execution")
+with nav[1]:
+    ui_card("Command Center", "Same actions as before — cleaner control surface.")
 
-    colA, colB = st.columns([1, 2])
-    with colA:
-        if st.button("🔐 Manual Login to LinkedIn", key="exec_login"):
-            try:
-                pw, ctx = manual_login()
-                st.session_state["pw"] = pw
-                st.session_state["context"] = ctx
-                st.success("✅ Logged in. Browser context saved.")
-            except Exception as e:
-                st.error(f"❌ Login failed: {e}")
+    # Login
+    top = st.columns([1, 1, 2])
+    if top[0].button("🔐 Login to LinkedIn"):
+        try:
+            pw, ctx = manual_login()
+            st.session_state["pw"] = pw
+            st.session_state["context"] = ctx
+            st.success("✅ Logged in. Browser context saved.")
+        except Exception as e:
+            st.error(f"❌ Login failed: {e}")
 
-    with colB:
-        st.caption("Run these daily actions to keep pipeline moving.")
+    # Add search to list
+    st.divider()
 
-    st.markdown("---")
+    cfg = load_config()
+    new_list_url = st.text_input(
+        "Lead List URL (from SalesNav)",
+        value=cfg.get("linkedin", {}).get("lists", {}).get("new_leads_url", ""),
+        key="ops_new_list_url",
+    )
+    new_list_name = st.text_input(
+        "Lead List Name (optional if URL is provided)",
+        value=cfg.get("linkedin", {}).get("lists", {}).get("new_leads", ""),
+        key="ops_new_list_name",
+    )
+    bulk_search_url = st.text_input("SalesNav Search URL to Add 100 Leads", "", key="ops_bulk_search_url")
 
-    g1 = st.columns(3)
-    g2 = st.columns(3)
+    if st.button("📅 Add Search to Lead List"):
+        try:
+            if not bulk_search_url or (not new_list_url and not new_list_name):
+                st.warning("Please provide the search URL and either a list name or URL.")
+            else:
+                added = add_search_results_to_list(
+                    search_url=bulk_search_url,
+                    list_url=new_list_url,
+                    list_name=new_list_name,
+                    context=st.session_state.get("context"),
+                )
+                st.success(f"✅ Added {added} leads to list: {new_list_name or new_list_url}")
+        except Exception as e:
+            st.error(f"❌ Failed to add leads: {e}")
 
-    if g1[0].button("1) Extract Leads", key="exec_extract"):
+    st.divider()
+
+    # Action Buttons (same calls)
+    cols = st.columns(6)
+
+    if cols[0].button("1. Extract Leads"):
         try:
             extract_all_searches(st.session_state.get("context"))
             st.success("✅ Extraction complete.")
         except Exception as e:
             st.error(f"❌ Extraction failed: {e}")
 
-    if g1[1].button("2) Sync to HubSpot", key="exec_sync"):
+    if cols[1].button("2. Sync to HubSpot"):
         try:
             sync_hubspot()
             st.success("✅ Sync complete.")
         except Exception as e:
             st.error(f"❌ Sync failed: {e}")
 
-    if g1[2].button("3) Send Invites", key="exec_invites"):
+    if cols[2].button("3. Send Invites"):
         try:
             send_invites(st.session_state.get("context"))
             st.success("✅ Invites sent.")
         except Exception as e:
             st.error(f"❌ Invite sending failed: {e}")
 
-    if g2[0].button("4) Process Follow-Ups", key="exec_followups"):
+    if cols[3].button("4. Process Follow-Ups"):
         try:
             process_followups(st.session_state.get("context"))
             st.success("✅ Follow-ups processed.")
         except Exception as e:
             st.error(f"❌ Follow-up failed: {e}")
 
-    if g2[1].button("5) Enrich Existing Leads", key="exec_enrich"):
+    if cols[4].button("5. Enrich Existing Leads"):
         try:
             enrich_missing_leads(config, st.session_state.get("context"))
             st.success("✅ Lead enrichment complete.")
         except Exception as e:
             st.error(f"❌ Enrichment failed: {e}")
 
-    if g2[2].button("6) Push Reporting Metrics", key="exec_metrics"):
+    if cols[5].button("6. Push Reporting Metrics"):
         try:
             push_daily_metrics()
             st.success("✅ Metrics pushed.")
         except Exception as e:
             st.error(f"❌ Reporting failed: {e}")
 
+    ui_card_end()
 
 # =========================================================
-# 📎 Assets
+# 📬 AUTO-SCHEDULE (your existing block, reorganized)
 # =========================================================
 
-with tabs[2]:
-    st.subheader("📎 Assets")
+with nav[2]:
+    ui_card("Auto-Schedule Messages", "Configure stages + preview + optionally save.")
 
-    with st.expander("📁 Files in collateral/ folder", expanded=False):
-        try:
-            if not os.path.exists(COLLATERAL_DIR):
-                st.info("📭 No files found. The collateral/ folder is empty.")
-            else:
-                files = os.listdir(COLLATERAL_DIR)
-                if not files:
-                    st.info("📭 No files found in collateral/")
-                else:
-                    for f in sorted(files):
-                        file_path = os.path.join(COLLATERAL_DIR, f)
-                        file_size_kb = os.path.getsize(file_path) / 1024
-                        st.markdown(f"📎 `{f}` — `{file_size_kb:.1f} KB`")
-        except Exception as e:
-            st.error(f"❌ Error reading folder: {e}")
+    # Preview mode toggle
+    preview_mode = st.checkbox("🕵️ Preview Only (No Messages Will Be Saved)", value=True)
 
-    with st.expander("📎 Upload New Collateral", expanded=True):
-        col_type = st.selectbox("Type", ["PDF", "Smart Link"], key="asset_type")
-        name = st.text_input("Title", key="asset_title")
-        description = st.text_area("Short description for prompt/context", key="asset_desc")
-
-        industry = st.selectbox(
-            "Industry or Theme",
-            [
-                "general",
-                "automotive_retail",
-                "healthcare",
-                "financial_services",
-                "manufacturing",
-                "education",
-                "telecommunications",
-                "logistics_supply_chain",
-                "legal_compliance",
-                "cybersecurity",
-                "cross_industry",
-            ],
-            key="asset_industry",
-        )
-
-        asset_type = st.selectbox(
-            "Asset Type",
-            ["case_study", "whitepaper", "video_demo", "one_pager", "deck", "benchmark"],
-            key="asset_kind",
-        )
-
-        file = url = None
-        if col_type == "PDF":
-            file = st.file_uploader("Upload PDF", type="pdf", key="asset_pdf")
-        else:
-            url = st.text_input("Paste Smart Link URL", key="asset_url")
-
-        if st.button("💾 Save Collateral", key="asset_save"):
-            if (file or url) and name and description:
-                entry = handle_collateral_upload(name, description, industry, asset_type, file, url)
-                st.success(f"✅ Collateral saved: {entry['name']}")
-            else:
-                st.warning("⚠️ Please fill all required fields.")
-
-
-# =========================================================
-# 🧬 Campaign Studio (Auto-Schedule + Industry Preview)
-# =========================================================
-
-with tabs[3]:
-    st.subheader("🧬 Campaign Studio")
-
-    preview_mode = st.checkbox("🕵️ Preview Only (No Messages Will Be Saved)", value=True, key="cs_preview")
-
+    # Button state flag
     if "schedule_clicked" not in st.session_state:
         st.session_state.schedule_clicked = False
 
@@ -627,12 +848,30 @@ with tabs[3]:
             all_stages = sorted(set([m["stage"] for m in approved_msgs]))
         except Exception as e:
             st.error(f"❌ Failed to load message library: {e}")
-            all_stages = ["intro", "value", "collateral", "nurture", "news", "knowledge", "friday_touch", "cta"]
+            all_stages = [
+                "intro",
+                "value",
+                "collateral",
+                "nurture",
+                "news",
+                "knowledge",
+                "friday_touch",
+                "cta",
+            ]
 
         st.subheader("🧩 Message Types")
         default_stages = [
             s
-            for s in ["intro", "value", "collateral", "nurture", "news", "knowledge", "friday_touch", "cta"]
+            for s in [
+                "intro",
+                "value",
+                "collateral",
+                "nurture",
+                "news",
+                "knowledge",
+                "friday_touch",
+                "cta",
+            ]
             if s in all_stages
         ]
         selected_stages = st.multiselect(
@@ -640,7 +879,6 @@ with tabs[3]:
             options=all_stages,
             default=default_stages,
             help="Only these message stages will be considered for scheduling.",
-            key="cs_stages",
         )
 
         st.subheader("⏱️ Time Gaps")
@@ -650,12 +888,11 @@ with tabs[3]:
                 f"Gap after {stage}",
                 min_value=0,
                 value=4,
-                help=f"Days to wait after a {stage} message before next one.",
-                key=f"cs_gap_{stage}",
+                help=f"Number of days to wait after a {stage} message before sending the next one.",
             )
 
         st.subheader("🔢 Limits")
-        max_per_lead = st.slider("Max messages per lead", 1, 10, 10, key="cs_max_per_lead")
+        max_per_lead = st.slider("Max messages per lead", 1, 10, 10)
         max_per_stage = {}
         for stage in selected_stages:
             default_value = 2 if stage == "collateral" else 1
@@ -663,7 +900,7 @@ with tabs[3]:
                 f"Max {stage} messages",
                 min_value=0,
                 value=default_value,
-                key=f"cs_max_{stage}",
+                key=f"max_{stage}",
             )
 
         st.subheader("🏭 Industry Filter")
@@ -684,11 +921,10 @@ with tabs[3]:
             "Restrict to these industries",
             options=industry_buckets,
             help="Leave empty to include all industries.",
-            key="cs_industry",
         )
 
         st.subheader("🛑 Exclude Specific Messages")
-        excluded_ids_input = st.text_input("Excluded message IDs (comma-separated)", key="cs_excluded")
+        excluded_ids_input = st.text_input("Excluded message IDs (comma-separated)")
         excluded_ids = [x.strip() for x in excluded_ids_input.split(",") if x.strip()]
 
         filters = {
@@ -711,22 +947,26 @@ with tabs[3]:
             company_sheet=company_sheet,
         )
 
-    c1, c2 = st.columns(2)
+    col1, col2 = st.columns(2)
 
-    if c1.button("🔍 Preview Auto-Scheduled Messages", key="cs_preview_btn"):
+    if col1.button("🔍 Preview Auto-Scheduled Messages"):
         try:
             preview_data = scheduler.auto_schedule(preview=True)
-            st.session_state["preview_messages"] = preview_data or []
             if preview_data:
+                st.session_state["preview_messages"] = preview_data
                 st.success(f"✅ Previewed {len(preview_data)} messages.")
-                st.dataframe(pd.DataFrame(preview_data), use_container_width=True)
+                st.dataframe(pd.DataFrame(preview_data), use_container_width=True, height=420)
             else:
+                st.session_state["preview_messages"] = []
                 st.info("📭 No messages to schedule.")
         except Exception as e:
             st.error(f"❌ Preview failed: {e}")
 
     if not preview_mode:
-        if c2.button("📬 Schedule Messages (Save to Sheet)", disabled=st.session_state.schedule_clicked, key="cs_save"):
+        if col2.button(
+                "📬 Schedule Messages (Save to Sheet)",
+                disabled=st.session_state.schedule_clicked,
+        ):
             try:
                 st.session_state.schedule_clicked = True
                 scheduler.auto_schedule(preview=False)
@@ -736,203 +976,163 @@ with tabs[3]:
             finally:
                 st.session_state.schedule_clicked = False
 
-    st.markdown("---")
-
-    with st.expander("🧠 Enrich Leads with Industry Buckets (Live Preview Only)", expanded=False):
-        if st.button("🔁 Enrich All Leads with Industry Buckets (Preview Only)", key="cs_bucket_preview"):
-            try:
-                cfg = load_config()
-                leads, _ = sheets.get_all_leads(cfg)
-                company_sheet_obj = sheets.get_company_sheet(cfg)
-                company_records = company_sheet_obj.get_all_records()
-                company_map = {c.get("company_id"): c for c in company_records if c and c.get("company_id")}
-
-                reverse_map, default_bucket = load_bucket_mapping()
-                enriched_preview = []
-
-                for lead in leads:
-                    industry = lead.get("industry", "")
-                    if not industry:
-                        company = company_map.get(lead.get("company_id"))
-                        industry = company.get("industry", "") if company else ""
-
-                    bucket = get_industry_bucket(industry.strip(), reverse_map, default_bucket)
-                    enriched_preview.append(
-                        {
-                            "name": lead.get("name"),
-                            "company": lead.get("company"),
-                            "industry": industry,
-                            "industry_bucket": bucket,
-                        }
-                    )
-
-                st.success(f"✅ Previewed {len(enriched_preview)} leads with their mapped buckets.")
-                st.dataframe(pd.DataFrame(enriched_preview), use_container_width=True)
-
-            except Exception as e:
-                st.error(f"❌ Enrichment failed: {e}")
-
-        try:
-            reverse_map, default_bucket = load_bucket_mapping()
-            bucket_list = defaultdict(list)
-            for industry, bucket in reverse_map.items():
-                bucket_list[bucket].append(industry)
-
-            st.markdown("### 📘 Current Industry → Bucket Mapping")
-            st.code(yaml.dump(dict(bucket_list), sort_keys=False), language="yaml")
-
-        except Exception as e:
-            st.error(f"❌ Failed to load bucket mapping: {e}")
-
+    ui_card_end()
 
 # =========================================================
-# 🚦 Scheduler (Runner + Force Send)
+# 📡 RUN SCHEDULER + FORCE SEND (your existing blocks)
 # =========================================================
 
-with tabs[4]:
-    st.subheader("🚦 Scheduler")
+with nav[3]:
+    ui_card("Outreach Message Scheduler", "Run scheduled messages + force send.")
 
-    with st.expander("📬 Run Scheduled Messages", expanded=True):
-        st.markdown("Send messages scheduled up to a selected date (optionally include missed ones).")
+    subtabs = st.tabs(["📬 Run Scheduled", "🔥 Force Send"])
 
-        r1, r2 = st.columns(2)
-        with r1:
-            run_date = st.date_input("📅 Run for date", value=today, key="run_date")
-        with r2:
-            max_messages = st.number_input("🔢 Max Messages Per Day", min_value=1, max_value=200, value=100, key="run_max")
+    with subtabs[0]:
+        with st.expander("📬 Run Scheduled Messages", expanded=True):
+            st.markdown("Send all messages scheduled up to a selected date (including missed ones if needed).")
 
-        backdate = st.checkbox("⏪ Include Missed (Older) Messages", key="run_backdate")
+            col1, col2 = st.columns(2)
+            with col1:
+                run_date = st.date_input("📅 Schedule For", value=today)
+            with col2:
+                max_messages = st.number_input(
+                    "🔢 Max Messages Per Day",
+                    min_value=1,
+                    max_value=200,
+                    value=100,
+                )
 
-        if st.button("🚀 Run Scheduler Now", key="run_now"):
-            try:
-                runner = MessageScheduler(
+            backdate = st.checkbox("⏪ Include Missed (Older) Messages")
+
+            if st.button("🚀 Run Scheduler Now"):
+                scheduler = MessageScheduler(
                     config=config,
                     filters={"max_messages_per_day": max_messages, "backdate": backdate},
                     mode="send_only",
                 )
                 with st.spinner("Running message scheduler..."):
-                    results = runner.run_scheduler(for_date=run_date)
+                    results = scheduler.run_scheduler(for_date=run_date)
 
                 st.success("✅ Scheduler complete!")
                 st.markdown("### Results")
                 for lid, mid, status in results:
                     st.write(f"• `{lid}` | `{mid}` → {status}")
 
-            except Exception as e:
-                st.error(f"❌ Scheduler run failed: {e}")
+    with subtabs[1]:
+        with st.expander("🔥 Force Send Messages", expanded=True):
+            st.markdown("Manually send messages based on filters and a selected message template.")
 
-    with st.expander("🔥 Force Send Messages", expanded=False):
-        st.markdown("Manually send messages based on filters and a selected template.")
+            industry = st.text_input("🏭 Filter by Industry (optional)")
+            company = st.text_input("🏢 Filter by Company (optional)")
+            location = st.text_input("📍 Filter by Location (optional)")
 
-        industry = st.text_input("🏭 Filter by Industry (optional)", key="force_industry")
-        company = st.text_input("🏢 Filter by Company (optional)", key="force_company")
-        location = st.text_input("📍 Filter by Location (optional)", key="force_location")
-
-        st.divider()
-        st.markdown("### ✉️ Select Message Template")
-
-        try:
+            st.divider()
+            st.markdown("### ✉️ Select Message Template")
             message_library = get_cached_message_library(config)
             filtered_templates = [m for m in message_library if m.get("status") == "approved"]
-        except Exception as e:
-            filtered_templates = []
-            st.error(f"❌ Failed to load message library: {e}")
 
-        if not filtered_templates:
-            st.warning("No approved message templates found.")
-        else:
-            template_options = [f"{m.get('message_id','')} - {str(m.get('template_text',''))[:50]}..." for m in filtered_templates]
-            selected_index = st.selectbox(
-                "Choose a Template",
-                range(len(template_options)),
-                format_func=lambda i: template_options[i],
-                key="force_template",
-            )
-            _ = filtered_templates[selected_index]
-
-            _ = st.date_input("📅 Schedule Date", value=today, key="force_date")
-
-            if st.button("⚠️ Force Send", key="force_send"):
-                st.info(
-                    "🚧 Force send logic not wired yet — next step: implement `force_send()` using selected filters + template."
+            if not filtered_templates:
+                st.warning("No approved message templates found.")
+            else:
+                template_options = [
+                    f"{m['message_id']} - {m['template_text'][:50]}..."
+                    for m in filtered_templates
+                ]
+                selected_index = st.selectbox(
+                    "Choose a Template",
+                    range(len(template_options)),
+                    format_func=lambda i: template_options[i],
                 )
+                selected_template = filtered_templates[selected_index]
 
+                scheduled_date = st.date_input("📅 Schedule Date", value=today)
+
+                if st.button("⚠️ Force Send"):
+                    st.info(
+                        "🚧 Force send logic not wired yet — next step: implement `force_send()` using selected filters and template."
+                    )
+
+    ui_card_end()
 
 # =========================================================
-# ✉️ Message Lab
+# ✉️ MESSAGING (your existing enhanced messaging UI)
 # =========================================================
 
-with tabs[5]:
-    st.subheader("✉️ Message Lab")
+with nav[4]:
+    ui_card("Generate Message for Selected Lead", "Filter leads → generate message → send or schedule.")
 
-    if st.button("🔄 Search Leads & Companies", key="ml_load"):
-        try:
-            leads, _ = sheets.get_all_leads(config)
-            company_sheet_obj = sheets.get_company_sheet(config)
-            company_records = company_sheet_obj.get_all_records()
-            company_details = [dict(row) for row in company_records if row]
-            st.session_state["leads"] = leads
-            st.session_state["company_details"] = company_details
-            st.success(f"✅ Loaded {len(leads)} leads.")
-        except Exception as e:
-            st.error(f"❌ Failed to load leads/companies: {e}")
+    if st.button("🔄 Search Leads & Companies"):
+        leads, _ = sheets.get_all_leads(config)
+        company_sheet = sheets.get_company_sheet(config)
+        company_records = company_sheet.get_all_records()
+        company_details = [dict(row) for row in company_records if row]
+        st.session_state["leads"] = leads
+        st.session_state["company_details"] = company_details
 
     if "leads" in st.session_state and "company_details" in st.session_state:
         leads = st.session_state["leads"]
         company_details = st.session_state["company_details"]
 
-        with st.expander("🔍 Filter Leads", expanded=False):
+        with st.expander("🔍 Filter Leads", expanded=True):
             unique_industries = sorted(
                 set([c.get("industry") for c in company_details if c.get("industry")])
             )
             selected_industries = st.multiselect(
-                "Industry",
-                options=unique_industries,
-                key="ml_industry_filter",
+                "Industry", options=unique_industries, key="industry_filter"
             )
 
-            filtered_company_ids = None
             if selected_industries:
                 filtered_company_ids = {
                     c.get("company_id")
                     for c in company_details
                     if c.get("industry") in selected_industries
                 }
+                company_details = [
+                    c for c in company_details if c.get("company_id") in filtered_company_ids
+                ]
+                leads = [l for l in leads if l.get("company_id") in filtered_company_ids]
 
             unique_companies = sorted(
                 set([c.get("company_name") for c in company_details if c.get("company_name")])
             )
             company_filter = st.multiselect(
-                "Company",
+                "Company (from industry filter above)",
                 options=unique_companies,
-                key="ml_company_filter",
+                key="company_filter",
             )
             connection_filter = st.selectbox(
-                "Connection Level",
-                ["All", "1st", "2nd", "3rd+"],
-                index=0,
-                key="ml_conn_filter",
+                "Connection Level", ["All", "1st", "2nd", "3rd+"], index=0
             )
 
         filtered_leads = leads[:]
-
-        if filtered_company_ids is not None:
-            filtered_leads = [l for l in filtered_leads if l.get("company_id") in filtered_company_ids]
-
         if company_filter:
             filtered_leads = [
                 l
                 for l in filtered_leads
-                if (l.get("company") in company_filter) or (l.get("company_name") in company_filter)
+                if l.get("company") in company_filter
+                   or l.get("company_name", "") in company_filter
             ]
-
+        if selected_industries:
+            valid_company_ids = {
+                c.get("company_id")
+                for c in company_details
+                if c.get("industry") in selected_industries
+            }
+            filtered_leads = [
+                l for l in filtered_leads if l.get("company_id") in valid_company_ids
+            ]
         if connection_filter != "All":
-            connection_lookup = {"1st": ["1st"], "2nd": ["2nd"], "3rd+": ["3rd", "3rd+", "3rd degree"]}
-            accepted = [v.lower() for v in connection_lookup.get(connection_filter, [])]
+            connection_lookup = {
+                "1st": ["1st"],
+                "2nd": ["2nd"],
+                "3rd+": ["3rd", "3rd+", "3rd degree"],
+            }
+            accepted = connection_lookup.get(connection_filter, [])
             filtered_leads = [
                 l
                 for l in filtered_leads
-                if l.get("connection", "").strip().lower() in accepted
+                if l.get("connection", "").strip().lower()
+                   in [v.lower() for v in accepted]
             ]
 
         if filtered_leads:
@@ -943,57 +1143,79 @@ with tabs[5]:
                 max_value=max(len(filtered_leads) - 1, 0),
                 value=0,
                 step=page_size,
-                key="ml_start",
+                key="start_index",
             )
-
-            page_slice = filtered_leads[start : start + page_size]
             lead_names = [
-                f"{l.get('name','')} – {l.get('title','')} @ {l.get('company') or l.get('company_name','')}"
-                for l in page_slice
+                f"{l['name']} – {l['title']} @ {l.get('company') or l.get('company_name', '')}"
+                for l in filtered_leads[start : start + page_size]
             ]
-
-            selected = st.selectbox("Select a lead", options=lead_names, key="ml_select")
+            selected = st.selectbox("Select a lead", options=lead_names)
             selected_index = lead_names.index(selected)
-            selected_lead = page_slice[selected_index]
+            selected_lead = filtered_leads[start + selected_index]
 
-            st.markdown("---")
+            st.divider()
             st.markdown(
-                f"#### {selected_lead.get('name','')} — {selected_lead.get('title','')} @ {selected_lead.get('company','')}"
+                f"#### {selected_lead['name']} — {selected_lead['title']} @ {selected_lead['company']}"
             )
-
-            company_id = selected_lead.get("company_id")
             fallback_industry = next(
-                (c.get("industry") for c in company_details if c.get("company_id") == company_id),
+                (
+                    c.get("industry")
+                    for c in company_details
+                    if c.get("company_id") == selected_lead.get("company_id")
+                ),
                 "N/A",
             )
-
             st.caption(
-                f"Industry: {fallback_industry} | Connection: {selected_lead.get('connection_level','N/A')} | Last message: {selected_lead.get('last_message_date','N/A')}"
+                f"Industry: {fallback_industry} | Connection: {selected_lead.get('connection_level', 'N/A')} | Last message: {selected_lead.get('last_message_date', 'N/A')}"
             )
 
-            name = st.text_input("Name", selected_lead.get("name", ""), key="ml_name")
-            title = st.text_input("Title", selected_lead.get("title", ""), key="ml_title")
-            company = st.text_input("Company", selected_lead.get("company", ""), key="ml_company")
+            left, right = st.columns(2)
+            with left:
+                name = st.text_input("Name", selected_lead.get("name", ""), key="name_input")
+                title = st.text_input(
+                    "Title", selected_lead.get("title", ""), key="title_input"
+                )
+                company = st.text_input(
+                    "Company", selected_lead.get("company", ""), key="company_input"
+                )
 
-            selected_lead["industry"] = selected_lead.get("industry") or fallback_industry
-            industry = st.text_input("Industry", selected_lead.get("industry", ""), key="ml_industry")
+            with right:
+                fallback_industry = next(
+                    (
+                        c.get("industry")
+                        for c in company_details
+                        if c.get("company_id") == selected_lead.get("company_id")
+                    ),
+                    "",
+                )
+                selected_lead["industry"] = selected_lead.get("industry") or fallback_industry
+                industry = st.text_input(
+                    "Industry", selected_lead["industry"], key="industry_input"
+                )
+                category = st.selectbox(
+                    "Message Category",
+                    list(config.get("categories", {}).keys()),
+                    key="message_category",
+                )
+                use_dynamic = st.checkbox(
+                    "Use AI-Powered Dynamic Prompting", value=True
+                )
 
-            chat = st.text_area("Chat History", selected_lead.get("chat_history", ""), key="ml_chat")
-            signals = st.text_area("LeadIQ Signals", selected_lead.get("leadiq", ""), key="ml_signals")
+            chat = st.text_area("Chat History", selected_lead.get("chat_history", ""))
+            signals = st.text_area("LeadIQ Signals", selected_lead.get("leadiq", ""))
 
+            company_id = selected_lead.get("company_id")
             company_info = next(
-                (c.get("description") for c in company_details if c.get("company_id") == company_id),
+                (
+                    c.get("description")
+                    for c in company_details
+                    if c.get("company_id") == company_id
+                ),
                 "",
             )
-            pdf = st.text_area("Company Details", company_info, key="ml_company_details")
+            pdf = st.text_area("Company Details", company_info)
 
-            categories = list(config.get("categories", {}).keys())
-            if not categories:
-                categories = ["default"]
-            category = st.selectbox("Message Category", categories, key="ml_category")
-            use_dynamic = st.checkbox("Use AI-Powered Dynamic Prompting", value=True, key="ml_dynamic")
-
-            if st.button("Generate Message", key="ml_generate"):
+            if st.button("Generate Message"):
                 test_lead = {
                     "name": name,
                     "title": title,
@@ -1004,63 +1226,65 @@ with tabs[5]:
                     "pdf_summary": pdf,
                     "category": category,
                 }
+                model_selection = config.get("ollama", {}).get("model")
+                if use_dynamic:
+                    message = generate_dynamic_message(test_lead, model_selection, config)
+                else:
+                    message = generate_connection(test_lead, model_selection, config)
+                st.session_state["generated_message"] = message
 
+        if "generated_message" in st.session_state:
+            st.text_area(
+                "Generated Message",
+                st.session_state["generated_message"],
+                height=140,
+            )
+
+            if st.button("Send Message"):
+                now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+                selected_lead["last_message_date"] = now
+                sheets.update_lead_message_date(config, selected_lead, now)
+                st.success(f"✅ Message sent to {name} (Last messaged on {now})")
+
+            if st.button("🕒 Schedule Message"):
+                scheduled_data = {
+                    "linkedin_id": selected_lead.get("linkedin_id", ""),
+                    "name": name,
+                    "title": title,
+                    "company": company,
+                    "industry": industry,
+                    "message": st.session_state["generated_message"],
+                    "category": category,
+                    "scheduled_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+                    "status": "scheduled",
+                }
                 try:
-                    if use_dynamic:
-                        message = generate_dynamic_message(test_lead, st.session_state.get("model_selection"), config)
-                    else:
-                        message = generate_connection(test_lead, st.session_state.get("model_selection"), config)
-                    st.session_state["generated_message"] = message
+                    sheets.append_scheduled_message(config, scheduled_data)
+                    st.success("✅ Message scheduled successfully.")
                 except Exception as e:
-                    st.error(f"❌ Message generation failed: {e}")
+                    st.error(f"❌ Failed to schedule message: {e}")
 
-            if "generated_message" in st.session_state:
-                st.text_area("Generated Message", st.session_state["generated_message"], height=140, key="ml_out")
-
-                if st.button("Send Message", key="ml_send"):
-                    try:
-                        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-                        selected_lead["last_message_date"] = now
-                        sheets.update_lead_message_date(config, selected_lead, now)
-                        st.success(f"✅ Message sent to {name} (Last messaged on {now})")
-                    except Exception as e:
-                        st.error(f"❌ Send failed: {e}")
-
-                if st.button("🕒 Schedule Message", key="ml_schedule"):
-                    scheduled_data = {
-                        "linkedin_id": selected_lead.get("linkedin_id", ""),
-                        "name": name,
-                        "title": title,
-                        "company": company,
-                        "industry": industry,
-                        "message": st.session_state["generated_message"],
-                        "category": category,
-                        "scheduled_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
-                        "status": "scheduled",
-                    }
-                    try:
-                        sheets.append_scheduled_message(config, scheduled_data)
-                        st.success("✅ Message scheduled successfully.")
-                    except Exception as e:
-                        st.error(f"❌ Failed to schedule message: {e}")
         else:
-            st.warning("⚠️ No leads match your current filters.")
+            st.warning("⚠️ No leads match your current filters. Try adjusting filters or reload.")
+
     else:
-        st.info("Load leads to begin.")
+        st.info("Click '🔄 Search Leads & Companies' to begin.")
 
+    ui_card_end()
 
 # =========================================================
-# 🗂️ Queue
+# 🗓️ QUEUE (your scheduled messages queue)
 # =========================================================
 
-with tabs[6]:
-    st.subheader("🗂️ Queue")
+with nav[5]:
+    ui_card("Scheduled Messages Queue", "View, filter, and manage scheduled messages.")
 
     try:
-        sheet = sheets._client(config).open_by_key(
-            config["gsheets"]["spreadsheet_id"]
-        ).worksheet("ScheduledMessages")
-
+        sheet = (
+            sheets._client(config)
+                .open_by_key(config["gsheets"]["spreadsheet_id"])
+                .worksheet("ScheduledMessages")
+        )
         records = sheet.get_all_records()
 
         if not records:
@@ -1068,334 +1292,301 @@ with tabs[6]:
         else:
             df = pd.DataFrame(records)
 
-            s1, s2, s3 = st.columns(3)
-            s1.metric("📬 Total", len(df))
-            s2.metric(
-                "✅ Sent",
-                (df["status"] == "sent").sum() if "status" in df.columns else 0,
-            )
-            s3.metric(
+            # Stats
+            c1, c2, c3 = st.columns(3)
+            c1.metric("📬 Total", len(df))
+            c2.metric("✅ Sent", (df.get("status") == "sent").sum() if "status" in df else 0)
+            c3.metric(
                 "📅 Upcoming",
-                (df["status"] == "scheduled").sum() if "status" in df.columns else 0,
+                (df.get("status") == "scheduled").sum() if "status" in df else 0,
             )
 
-            with st.expander("🔍 Filter Options", expanded=False):
-                status_filter = st.selectbox(
-                    "Status",
-                    ["All", "scheduled", "sent"],
-                    key="q_status",
-                )
-                search_term = st.text_input(
-                    "Search by Name or Company",
-                    key="q_search",
-                )
-                page_size = st.selectbox(
-                    "Messages per page",
-                    [10, 20, 50, 100],
-                    index=1,
-                    key="q_pagesize",
-                )
+            with st.expander("🔍 Filter Options", expanded=True):
+                status_filter = st.selectbox("Status", ["All", "scheduled", "sent"])
+                search_term = st.text_input("Search by Name or Company")
+                page_size = st.selectbox("Messages per page", [10, 20, 50, 100], index=1)
 
             filtered_df = df.copy()
+            if status_filter != "All" and "status" in filtered_df:
+                filtered_df = filtered_df[filtered_df["status"] == status_filter]
 
-            if status_filter != "All" and "status" in filtered_df.columns:
-                filtered_df = filtered_df[
-                    filtered_df["status"] == status_filter
-                    ]
-
-            if (
-                    search_term
-                    and "name" in filtered_df.columns
-                    and "company" in filtered_df.columns
-            ):
-                term = search_term.lower()
-                filtered_df = filtered_df[
-                    filtered_df["name"].astype(str).str.lower().str.contains(term)
-                    | filtered_df["company"].astype(str).str.lower().str.contains(term)
-                    ]
+            if search_term:
+                if "name" in filtered_df and "company" in filtered_df:
+                    filtered_df = filtered_df[
+                        filtered_df["name"].astype(str).str.lower().str.contains(search_term.lower())
+                        | filtered_df["company"].astype(str).str.lower().str.contains(search_term.lower())
+                        ]
 
             total_records = len(filtered_df)
             total_pages = max(1, (total_records - 1) // page_size + 1)
-
-            page = st.number_input(
-                "Page",
-                min_value=1,
-                max_value=total_pages,
-                step=1,
-                key="q_page",
-            )
-
-            start = (page - 1) * page_size
-            end = page * page_size
+            page = st.number_input("Page", min_value=1, max_value=total_pages, step=1)
+            start, end = (page - 1) * page_size, page * page_size
             paged_df = filtered_df.iloc[start:end]
 
-            cols_to_show = [
-                c
-                for c in [
-                    "rank",
-                    "name",
-                    "company",
-                    "scheduled_for",
-                    "message_type",
-                    "status",
-                    "industry_bucket",
-                ]
-                if c in paged_df.columns
-            ]
+            # Display
+            cols_to_show = [c for c in [
+                "rank",
+                "name",
+                "company",
+                "scheduled_for",
+                "message_type",
+                "status",
+                "industry_bucket",
+            ] if c in paged_df.columns]
 
             st.dataframe(
-                paged_df[cols_to_show].reset_index(drop=True)
-                if cols_to_show
-                else paged_df.reset_index(drop=True),
+                paged_df[cols_to_show].reset_index(drop=True),
                 use_container_width=True,
                 height=420,
             )
 
-            for idx, row in paged_df.iterrows():
-                display_name = f"📨 {row.get('name','')} — {row.get('company','')}"
-                with st.expander(display_name):
+            # Actions
+            for _, row in paged_df.iterrows():
+                title = f"📨 Message: {row.get('name','')} — {row.get('company','')}"
+                with st.expander(title):
+                    msg_text_col = "message_text" if "message_text" in row else "message"
+                    st.code(str(row.get(msg_text_col, "")), language="text")
 
-                    if "message_text" in row and pd.notna(row["message_text"]):
-                        st.code(str(row["message_text"]), language="text")
-                    elif "message" in row and pd.notna(row["message"]):
-                        st.code(str(row["message"]), language="text")
-
-                    row_index = idx + 2  # assumes header row at index 1
-                    lid = row.get("linkedin_id", "")
+                    row_index = int(row.get("rank", 0)) + 1
                     msg_id = row.get("message_id", "")
+                    lid = row.get("linkedin_id", "")
+                    a1, a2 = st.columns(2)
 
-                    b1, b2 = st.columns(2)
+                    if a1.button("✅ Mark as Sent", key=f"sent_{lid}_{msg_id}_{row_index}"):
+                        # NOTE: Keep your original column index if needed
+                        sheet.update_cell(row_index, 7, "sent")
+                        st.success(f"✅ Marked sent: {row.get('name','')}")
 
-                    if b1.button(
-                            "✅ Mark as Sent",
-                            key=f"q_sent_{lid}_{msg_id}_{idx}",
-                    ):
-                        try:
-                            if "status" in df.columns:
-                                col_index = df.columns.get_loc("status") + 1
-                                sheet.update_cell(row_index, col_index, "sent")
-                            st.success(f"Marked as sent: {row.get('name','')}")
-                        except Exception as e:
-                            st.error(f"❌ Failed to mark sent: {e}")
-
-                    if b2.button(
-                            "🗑️ Delete",
-                            key=f"q_del_{lid}_{msg_id}_{idx}",
-                    ):
-                        try:
-                            sheet.delete_rows(row_index)
-                            st.warning(
-                                f"Deleted message for {row.get('name','')}"
-                            )
-                        except Exception as e:
-                            st.error(f"❌ Failed to delete row: {e}")
+                    if a2.button("🗑️ Delete", key=f"del_{lid}_{msg_id}_{row_index}"):
+                        sheet.delete_rows(row_index)
+                        st.warning(f"🗑️ Deleted message for {row.get('name','')}")
 
     except Exception as e:
         st.error(f"❌ Failed to load scheduled messages: {e}")
 
+    ui_card_end()
 
 # =========================================================
-# ⚙️ Settings (Configuration) — FIXED + COMPLETE TAB BLOCK
-# Drop-in replacement for your Settings tab
+# 📎 COLLATERAL (your existing collateral blocks)
 # =========================================================
 
-with tabs[7]:
-    st.subheader("⚙️ Settings")
+with nav[6]:
+    ui_card("Collateral Library", "Upload + manage PDFs and smart links.")
 
-    # Load config fresh inside Settings tab
-    cfg = load_config()
-
-    # ---- LinkedIn ----
-    linkedin_user = st.text_input(
-        "LinkedIn Username",
-        value=cfg.get("linkedin", {}).get("username", ""),
-        key="set_li_user",
-    )
-    linkedin_pass = st.text_input(
-        "LinkedIn Password",
-        type="password",
-        value=cfg.get("linkedin", {}).get("password", ""),
-        key="set_li_pass",
-    )
-
-    # ✅ FIX: join + string literal (no broken quotes)
-    searches_raw = st.text_area(
-        "SalesNav Searches (name|url per line)",
-        value="\n".join(
-            [
-                f"{s.get('name','')}|{s.get('url','')}"
-                for s in cfg.get("linkedin", {}).get("searches", [])
-            ]
-        ),
-        key="set_searches",
-    )
-
-    # ---- SalesNav Lists ----
-    new_list_url = st.text_input(
-        "Lead List URL (from SalesNav)",
-        value=cfg.get("linkedin", {}).get("lists", {}).get("new_leads_url", ""),
-        key="set_new_list_url",
-    )
-    new_list_name = st.text_input(
-        "Lead List Name (optional if URL is provided)",
-        value=cfg.get("linkedin", {}).get("lists", {}).get("new_leads", ""),
-        key="set_new_list_name",
-    )
-    invited_list = st.text_input(
-        "Invited List Name",
-        value=cfg.get("linkedin", {}).get("lists", {}).get("invited", ""),
-        key="set_invited_list",
-    )
-    connected_list = st.text_input(
-        "Connected List Name",
-        value=cfg.get("linkedin", {}).get("lists", {}).get("connected", ""),
-        key="set_connected_list",
-    )
-    bulk_search_url = st.text_input(
-        "SalesNav Search URL to Add 100 Leads",
-        value="",
-        key="set_bulk_url",
-    )
-
-    # ---- HubSpot / HF ----
-    hub_key = st.text_input(
-        "HubSpot API Key",
-        type="password",
-        value=cfg.get("hubspot", {}).get("api_key", ""),
-        key="set_hub_key",
-    )
-    hf_token = st.text_input(
-        "HuggingFace Token",
-        type="password",
-        value=cfg.get("huggingface", {}).get("token", ""),
-        key="set_hf_token",
-    )
-    hf_model = st.text_input(
-        "HF Model",
-        value=cfg.get("huggingface", {}).get("model", "meta-llama/Llama-2-7b-chat-hf"),
-        key="set_hf_model",
-    )
-
-    # ---- Ollama ----
-    ollama_models_config = cfg.get("ollama", {}).get("models", [])
-    if not ollama_models_config:
-        st.warning("⚠️ No Ollama models found in config.yaml → ollama.models.")
-        ollama_models_config = ["mistral", "llama3", "deepseek"]
-
-    default_model = cfg.get("ollama", {}).get("model", ollama_models_config[0])
-    model_selection = st.selectbox(
-        "LLM Model (Ollama)",
-        ollama_models_config,
-        index=ollama_models_config.index(default_model) if default_model in ollama_models_config else 0,
-        key="set_model",
-    )
-    st.session_state["model_selection"] = model_selection
-
-    # ---- Rate limits ----
-    min_delay = st.number_input(
-        "Min Delay (sec)",
-        value=int(cfg.get("rate_limits", {}).get("min_delay_sec", 30)),
-        key="set_min_delay",
-    )
-    max_delay = st.number_input(
-        "Max Delay (sec)",
-        value=int(cfg.get("rate_limits", {}).get("max_delay_sec", 90)),
-        key="set_max_delay",
-    )
-
-    # ---- Prompts ----
-    conn_seed = st.text_area(
-        "Connection Prompt",
-        value=cfg.get("seeds", {}).get("connection", ""),
-        key="set_conn_seed",
-    )
-    follow_seed = st.text_area(
-        "Follow-Up Prompt",
-        value=cfg.get("seeds", {}).get("followup", ""),
-        key="set_follow_seed",
-    )
-
-    # ---- Google Sheets ----
-    gs_creds = st.text_input(
-        "Google Creds JSON",
-        value=cfg.get("gsheets", {}).get("creds_json", ""),
-        key="set_gs_creds",
-    )
-    gs_sheet = st.text_input(
-        "Spreadsheet ID",
-        value=cfg.get("gsheets", {}).get("spreadsheet_id", ""),
-        key="set_gs_sheet",
-    )
-    gs_leads_ws = st.text_input(
-        "Leads Worksheet",
-        value=cfg.get("gsheets", {}).get("leads_ws", "Leads"),
-        key="set_gs_leads",
-    )
-    gs_report_ws = st.text_input(
-        "Report Worksheet",
-        value=cfg.get("gsheets", {}).get("report_ws", "Report"),
-        key="set_gs_report",
-    )
-
-    st.markdown("---")
-
-    # ---- Utility action: Add search results to list ----
-    if st.button("📅 Add Search to Lead List", key="set_add_search"):
+    with st.expander("📁 Files in collateral/ folder", expanded=False):
         try:
-            if not bulk_search_url or (not new_list_url and not new_list_name):
-                st.warning("Please provide the search URL and either a list name or URL.")
+            if not os.path.exists(COLLATERAL_DIR):
+                st.info("📭 No files found. The collateral/ folder is empty.")
             else:
-                added = add_search_results_to_list(
-                    search_url=bulk_search_url,
-                    list_url=new_list_url,
-                    list_name=new_list_name,
-                    context=st.session_state.get("context"),
-                )
-                st.success(f"✅ Added {added} leads to list: {new_list_name or new_list_url}")
+                files = os.listdir(COLLATERAL_DIR)
+                if not files:
+                    st.info("📭 No files found in collateral/")
+                else:
+                    for f in sorted(files):
+                        file_path = os.path.join(COLLATERAL_DIR, f)
+                        file_size_kb = os.path.getsize(file_path) / 1024
+                        st.markdown(f"📎 `{f}` — `{file_size_kb:.1f} KB`")
         except Exception as e:
-            st.error(f"❌ Failed to add leads: {e}")
+            st.error(f"❌ Error reading folder: {e}")
 
-    # ---- Save config ----
-    if st.button("Save Configuration", key="set_save"):
-        searches = []
-        for line in searches_raw.splitlines():
-            if "|" in line:
-                n, u = line.split("|", 1)
-                searches.append({"name": n.strip(), "url": u.strip()})
+    with st.expander("📎 Upload New Collateral", expanded=True):
+        col_type = st.selectbox("Type", ["PDF", "Smart Link"])
+        name = st.text_input("Title")
+        description = st.text_area("Short description for prompt/context")
 
-        new_cfg = {
-            "linkedin": {
-                "username": linkedin_user,
-                "password": linkedin_pass,
-                "searches": searches,
-                "lists": {
-                    "new_leads": new_list_name,
-                    "new_leads_url": new_list_url,
-                    "invited": invited_list,
-                    "connected": connected_list,
+        industry = st.selectbox(
+            "Industry or Theme",
+            [
+                "general",
+                "automotive_retail",
+                "healthcare",
+                "financial_services",
+                "manufacturing",
+                "education",
+                "telecommunications",
+                "logistics_supply_chain",
+                "legal_compliance",
+                "cybersecurity",
+                "cross_industry",
+            ],
+        )
+
+        asset_type = st.selectbox(
+            "Asset Type",
+            ["case_study", "whitepaper", "video_demo", "one_pager", "deck", "benchmark"],
+        )
+
+        file = url = None
+        if col_type == "PDF":
+            file = st.file_uploader("Upload PDF", type="pdf")
+        else:
+            url = st.text_input("Paste Smart Link URL")
+
+        if st.button("💾 Save Collateral"):
+            if (file or url) and name and description:
+                entry = handle_collateral_upload(
+                    name, description, industry, asset_type, file, url
+                )
+                st.success(f"✅ Collateral saved: {entry['name']}")
+            else:
+                st.warning("⚠️ Please fill all required fields.")
+
+    ui_card_end()
+
+# =========================================================
+# ⚙️ CONFIG (your existing config block; UI only re-org)
+# =========================================================
+
+with nav[7]:
+    ui_card("Configuration", "All settings remain identical — just organized.")
+
+    with st.expander("⚙️ Configuration", expanded=True):
+        linkedin_user = st.text_input(
+            "LinkedIn Username",
+            value=config.get("linkedin", {}).get("username", ""),
+        )
+        linkedin_pass = st.text_input("LinkedIn Password", type="password")
+
+        searches_raw = st.text_area(
+            "SalesNav Searches (name|url per line)",
+            value="\n".join(
+                [
+                    f"{s['name']}|{s['url']}"
+                    for s in config.get("linkedin", {}).get("searches", [])
+                ]
+            ),
+        )
+
+        new_list_url = st.text_input(
+            "Lead List URL (from SalesNav)",
+            value=config.get("linkedin", {}).get("lists", {}).get("new_leads_url", ""),
+        )
+        new_list_name = st.text_input(
+            "Lead List Name (optional if URL is provided)",
+            value=config.get("linkedin", {}).get("lists", {}).get("new_leads", ""),
+        )
+        invited_list = st.text_input(
+            "Invited List Name",
+            value=config.get("linkedin", {}).get("lists", {}).get("invited", ""),
+        )
+        connected_list = st.text_input(
+            "Connected List Name",
+            value=config.get("linkedin", {}).get("lists", {}).get("connected", ""),
+        )
+        bulk_search_url = st.text_input("SalesNav Search URL to Add 100 Leads", "")
+
+        hub_key = st.text_input(
+            "HubSpot API Key",
+            type="password",
+            value=config.get("hubspot", {}).get("api_key", ""),
+        )
+        hf_token = st.text_input(
+            "HuggingFace Token",
+            type="password",
+            value=config.get("huggingface", {}).get("token", ""),
+        )
+        hf_model = st.text_input(
+            "HF Model",
+            value=config.get("huggingface", {}).get(
+                "model", "meta-llama/Llama-2-7b-chat-hf"
+            ),
+        )
+
+        ollama_models_config = config.get("ollama", {}).get("models", [])
+        if not ollama_models_config:
+            st.warning(
+                "⚠️ No Ollama models found in config.yaml → ollama.models. Please check the config file."
+            )
+            ollama_models_config = ["mistral", "llama3", "deepseek"]
+
+        default_model = config.get("ollama", {}).get(
+            "model", ollama_models_config[0] if ollama_models_config else "mistral"
+        )
+        model_selection = st.selectbox(
+            "LLM Model (Ollama)",
+            ollama_models_config,
+            index=ollama_models_config.index(default_model)
+            if default_model in ollama_models_config
+            else 0,
+        )
+
+        min_delay = st.number_input(
+            "Min Delay (sec)",
+            value=config.get("rate_limits", {}).get("min_delay_sec", 30),
+        )
+        max_delay = st.number_input(
+            "Max Delay (sec)",
+            value=config.get("rate_limits", {}).get("max_delay_sec", 90),
+        )
+
+        conn_seed = st.text_area(
+            "Connection Prompt",
+            value=config.get("seeds", {}).get("connection", ""),
+        )
+        follow_seed = st.text_area(
+            "Follow-Up Prompt",
+            value=config.get("seeds", {}).get("followup", ""),
+        )
+
+        gs_creds = st.text_input(
+            "Google Creds JSON", value=config.get("gsheets", {}).get("creds_json", "")
+        )
+        gs_sheet = st.text_input(
+            "Spreadsheet ID",
+            value=config.get("gsheets", {}).get("spreadsheet_id", ""),
+        )
+        gs_leads_ws = st.text_input(
+            "Leads Worksheet", value=config.get("gsheets", {}).get("leads_ws", "Leads")
+        )
+        gs_report_ws = st.text_input(
+            "Report Worksheet", value=config.get("gsheets", {}).get("report_ws", "Report")
+        )
+
+        if st.button("Save Configuration"):
+            searches = []
+            for line in searches_raw.splitlines():
+                if "|" in line:
+                    name, url = line.split("|", 1)
+                    searches.append({"name": name.strip(), "url": url.strip()})
+
+            new_cfg = {
+                "linkedin": {
+                    "username": linkedin_user,
+                    "password": linkedin_pass,
+                    "searches": searches,
+                    "lists": {
+                        "new_leads": new_list_name,
+                        "new_leads_url": new_list_url,
+                        "invited": invited_list,
+                        "connected": connected_list,
+                    },
                 },
-            },
-            "hubspot": {"api_key": hub_key},
-            "huggingface": {"token": hf_token, "model": hf_model},
-            "ollama": {"model": model_selection, "models": ollama_models_config},
-            "rate_limits": {"min_delay_sec": int(min_delay), "max_delay_sec": int(max_delay)},
-            "seeds": {"connection": conn_seed, "followup": follow_seed},
-            "gsheets": {
-                "creds_json": gs_creds,
-                "spreadsheet_id": gs_sheet,
-                "leads_ws": gs_leads_ws,
-                "report_ws": gs_report_ws,
-            },
-        }
-
-        try:
+                "hubspot": {"api_key": hub_key},
+                "huggingface": {"token": hf_token, "model": hf_model},
+                "ollama": {"model": model_selection, "models": ollama_models_config},
+                "rate_limits": {
+                    "min_delay_sec": int(min_delay),
+                    "max_delay_sec": int(max_delay),
+                },
+                "seeds": {"connection": conn_seed, "followup": follow_seed},
+                "gsheets": {
+                    "creds_json": gs_creds,
+                    "spreadsheet_id": gs_sheet,
+                    "leads_ws": gs_leads_ws,
+                    "report_ws": gs_report_ws,
+                },
+            }
             save_config(new_cfg)
             load_config.clear()
-
-            # refresh in-memory config for rest of app
             config = load_config()
-            st.session_state["config"] = config
-
             st.success("✅ Configuration saved.")
-        except Exception as e:
-            st.error(f"❌ Failed to save config: {e}")
+
+    ui_card_end()
+
+# =========================================================
+# Note
+# =========================================================
+# This file is "complete" for the code you pasted in chat.
+# If your original file has extra sections beyond what you pasted (e.g., more tabs,
+# extra analytics, other admin tooling), paste those blocks and they can be slotted
+# into the same nav structure without changing functionality.

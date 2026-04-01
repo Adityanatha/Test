@@ -1,5 +1,5 @@
 gsheets:
-  creds_json: /Users/infoobjects/Tools/Test/datafiles/focus-invention-251008-af96d014d45c.json
+  creds_json: /Users/infoobjects/Tools/Test/datafiles/focus-invention-251008-51ac49f05731.json
   leads_ws: Leads
   report_ws: Report
   spreadsheet_id: 1CZh1XEXKuqyZYkOAfgMtVvNYzcvv_7zY84z1N6oueIQ
@@ -16,13 +16,13 @@ linkedin:
     new_leads_url: https://www.linkedin.com/sales/lists/people/6959228537564233728?sortCriteria=LAST_ACTIVITY&sortOrder=DESCENDING
   password: ''
   searches:
+  - name: AI_LEAD_BFSI_Q1_CAN
+    url: https://www.linkedin.com/sales/lists/people/7431921213389811712?sortCriteria=LAST_ACTIVITY&sortOrder=DESCENDING
   - name: Recommended Leads
     url: https://www.linkedin.com/sales/lists/people/6959228537564233728?sortCriteria=LAST_ACTIVITY&sortOrder=DESCENDING
-  - name: AI_New_Lead
-    url: https://www.linkedin.com/sales/lists/people/7346564972618969088?sortCriteria=LAST_ACTIVITY&sortOrder=DESCENDING
   username: your_email@example.com
 ollama:
-  model: mistral:instruct
+  model: deepseek
   models:
   - mistral:instruct
   - llama3
